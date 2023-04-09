@@ -42,7 +42,7 @@ let positionsCount = 0;
 const ib = new IBApi({
   // clientId: 0,
   // host: '127.0.0.1',
-  port: 7497,   
+  port: 7497,
 });
 const tickerID = 6000
 const contract = new Stock('AAPL', undefined, 'USD')
@@ -57,18 +57,19 @@ wss.on('connection', (ws: WebSocket) => {
   ws.on('message', (message: string) => {
     console.log(`Recived Message => ${message}`);
   })
-  ib.reqHistoricalData(tickerID, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+  ib.reqHistoricalData(tickerID, contract, '', '1 Y', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
   ib.on(EventName.historicalData, (reqId: number, time: string, open: number, high: number, low: number, close: number, volume: number, count: number | undefined, WAP: number, hasGaps: boolean | undefined) => {
-    console.log(`open: ${open} close: ${close}`)    
+    console.log(`open: ${open} close: ${close}`)
+  
     const tickerData = {
       reqId,
       time,
       open,
       high,
-      low, 
+      low,
       close,
-      volume, 
-      WAP    
+      volume,
+      WAP
     }
     ws.send(JSON.stringify(tickerData))
   })

@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import './App.css'
 import MarketDataGraphs from './components/market-data-graph/market-data-graphs'
+import { LoginPage } from './pages/LoginPage'
 
 function App() {
   return (
     <div className="App">
-      <MarketDataGraphs />
+      {/* <MarketDataGraphs /> */}
+      <LoginPage/>
     </div>
   )
 }
