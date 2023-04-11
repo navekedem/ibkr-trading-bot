@@ -1,18 +1,16 @@
-// @ts-nocheck
-import React, { useEffect, useRef, useState } from "react";
-import { MarketData } from "../../types/market-data";
+import React, { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import apexchart, { ApexOptions } from "apexcharts";
+import { Flex, Spinner } from "@chakra-ui/react";
 
-
-
-interface MarketDataGraphsProps { }
-
-const chartOptions: ApexOption = {
+const chartOptions: ApexOptions = {
     chart: {
         type: "candlestick",
         height: 350,
-        id: "ibkr-chart",
+        // id: "ibkr-chart",
+        toolbar: {
+            show: false,
+        }
     },
     title: {
         text: "Interactive Brokers Bot Chart"
@@ -21,34 +19,51 @@ const chartOptions: ApexOption = {
         type: "datetime"
     },
     yaxis: {
+        min: 0,
+        forceNiceScale: true,
         tooltip: {
             enabled: true
         }
     }
 }
 
-const MarketDataGraphs: React.FC<MarketDataGraphsProps> = (props) => {
-    const [series, setSeries] = useState([
-        {
-            data: []
-        }
-    ])
-    // const {current: marketData} = marketDataState
+interface CustomSeries {
+    reqId: number
+    series: ApexAxisChartSeries
+}
+
+
+
+
+export const MarketDataGraphs: React.FC = (props) => {
+    const [stocksSeries, setSeries] = useState<CustomSeries[]>([])
+
     useEffect(() => {
         const ws = new WebSocket('ws://localhost:8080');
         ws.onopen = () => {
             console.log('WebSocket connection opened');
         };
         ws.onmessage = (event) => {
-            const { open, high, low, close, time } = JSON.parse(event.data)
-            const date = new Date(Date.parse(`${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)}`))
+            const { open, high, low, close, date, reqId } = JSON.parse(event.data)
             const priceLevels = [open, high, low, close]
-
             setSeries(prevSeriesState => {
-                prevSeriesState[0].data.push({ x: date, y: priceLevels })
+                const foundedSeries = prevSeriesState.find(series => series.reqId === reqId)
+                //@ts-ignore
+                if (foundedSeries) foundedSeries.series[0].data.push({ x: date, y: priceLevels })
+                else {
+                    const series = {
+                        reqId: reqId,
+                        series: [
+                            {
+                                data: [{ x: date, y: priceLevels }]
+                            }
+                        ]
+                    }
+                    prevSeriesState.push(series)
+                }
                 return prevSeriesState
             })
-            apexchart.exec("ibkr-chart", 'updateSeries', series)
+            // apexchart.exec("ibkr-chart", 'updateSeries', series)
         };
         ws.onclose = () => {
             console.log('WebSocket connection closed');
@@ -57,21 +72,21 @@ const MarketDataGraphs: React.FC<MarketDataGraphsProps> = (props) => {
         return () => {
             ws.close();
         };
-    })
+    }, [])
 
 
     return (
-        <div>
-            <h1>Market Data Graphs</h1>
-            <Chart
-                type="candlestick"
-                options={chartOptions}
-                series={series}
-                width={500}
-                height={500}
-            />
-        </div>
+        <Flex margin={'2rem 0'}>
+            {stocksSeries.length ? stocksSeries.map(series => {
+               return <Chart
+                    type="candlestick"
+                    options={chartOptions}
+                    series={series.series}
+                    width={1300}
+                    height={800}
+                />
+            }) : <Spinner size='lg' />}
+
+        </Flex>
     )
 }
-
-export default MarketDataGraphs

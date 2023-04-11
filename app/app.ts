@@ -44,7 +44,7 @@ const ib = new IBApi({
   // host: '127.0.0.1',
   port: 7497,
 });
-const tickerID = 6000
+let tickerID = 6000
 const contract = new Stock('AAPL', undefined, 'USD')
 ib.connect();
 ib.on(EventName.result, (event: string, args: string[]) => {
@@ -57,13 +57,19 @@ wss.on('connection', (ws: WebSocket) => {
   ws.on('message', (message: string) => {
     console.log(`Recived Message => ${message}`);
   })
-  ib.reqHistoricalData(tickerID, contract, '', '1 Y', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+  ib.reqHistoricalData(tickerID, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+  tickerID +=1
+  ib.reqHistoricalData(tickerID, contract, '', '1 M', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+  tickerID +=1
+  ib.reqHistoricalData(tickerID, contract, '', '1 M', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
+  tickerID +=1
+
   ib.on(EventName.historicalData, (reqId: number, time: string, open: number, high: number, low: number, close: number, volume: number, count: number | undefined, WAP: number, hasGaps: boolean | undefined) => {
     console.log(`open: ${open} close: ${close}`)
   
     const tickerData = {
       reqId,
-      time,
+      date: new Date(Date.parse(`${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)}`)),
       open,
       high,
       low,
@@ -71,6 +77,7 @@ wss.on('connection', (ws: WebSocket) => {
       volume,
       WAP
     }
+    // console.log(tickerData)
     ws.send(JSON.stringify(tickerData))
   })
 
