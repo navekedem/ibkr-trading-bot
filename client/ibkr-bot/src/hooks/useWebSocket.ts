@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 
 export function useWebSocket(url: string) {
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<any[]>([]);
+  const [error, setError] = useState<any>(null);
 
   useEffect(() => {
     const socket = new WebSocket(url);
@@ -13,7 +13,7 @@ export function useWebSocket(url: string) {
     };
 
     socket.onmessage = (event) => {
-      setMessage(`${event.data}`);
+      setMessage(prevState => [...prevState, JSON.parse(event.data)]);
     };
 
     socket.onclose = () => {

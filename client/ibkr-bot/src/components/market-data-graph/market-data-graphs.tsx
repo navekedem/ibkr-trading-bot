@@ -1,92 +1,81 @@
-import React, { useEffect, useState } from "react";
-import Chart from "react-apexcharts";
+import React, { useEffect, useRef, useState } from "react";
 import apexchart, { ApexOptions } from "apexcharts";
-import { Flex, Spinner } from "@chakra-ui/react";
-
-const chartOptions: ApexOptions = {
-    chart: {
-        type: "candlestick",
-        height: 350,
-        // id: "ibkr-chart",
-        toolbar: {
-            show: false,
-        }
-    },
-    title: {
-        text: "Interactive Brokers Bot Chart"
-    },
-    xaxis: {
-        type: "datetime"
-    },
-    yaxis: {
-        min: 0,
-        forceNiceScale: true,
-        tooltip: {
-            enabled: true
-        }
-    }
-}
-
-interface CustomSeries {
-    reqId: number
-    series: ApexAxisChartSeries
-}
-
-
+import { Center, Flex, Spinner } from "@chakra-ui/react";
+import { useWebSocket } from "../../hooks/useWebSocket";
+import ReactApexChart from "react-apexcharts";
+import { DailyChartOptions, HourlyChartOptions } from "../../consts/apexChartOptions";
 
 
 export const MarketDataGraphs: React.FC = (props) => {
-    const [stocksSeries, setSeries] = useState<CustomSeries[]>([])
+    // const [stockMinuteSeries, setMinuteSeries] = useState<CustomChart>({
+    //     reqId: 6002,
+    //     options: {
+    //         ...staticChartOptions,
+    //         chart: {
+    //             id: '6002'
+    //         }
+    //     },
+    //     series: [{ data: [] }]
+    // })
+
+
+    const { ws, message, error } = useWebSocket('ws://localhost:8080')
 
     useEffect(() => {
-        const ws = new WebSocket('ws://localhost:8080');
-        ws.onopen = () => {
-            console.log('WebSocket connection opened');
-        };
-        ws.onmessage = (event) => {
-            const { open, high, low, close, date, reqId } = JSON.parse(event.data)
-            const priceLevels = [open, high, low, close]
-            setSeries(prevSeriesState => {
-                const foundedSeries = prevSeriesState.find(series => series.reqId === reqId)
-                //@ts-ignore
-                if (foundedSeries) foundedSeries.series[0].data.push({ x: date, y: priceLevels })
-                else {
-                    const series = {
-                        reqId: reqId,
-                        series: [
-                            {
-                                data: [{ x: date, y: priceLevels }]
-                            }
-                        ]
-                    }
-                    prevSeriesState.push(series)
-                }
-                return prevSeriesState
-            })
-            // apexchart.exec("ibkr-chart", 'updateSeries', series)
-        };
-        ws.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
+        if (!message || !message.length) return
+        const dailyChart = message.filter(data => data.reqId === 6000)
+        handleDailyChart(dailyChart)
+        const hourlyChart = message.filter(data => data.reqId === 6001)
+        handleHourlyChart(hourlyChart)
+    }, [message])
 
-        return () => {
-            ws.close();
-        };
-    }, [])
+
+    const handleDailyChart = (dailyChart: any[]) => {
+        apexchart.exec('6000', 'updateSeries', [{data: handleChartData(dailyChart)}])
+    }
+
+    const handleHourlyChart = (hourlyChart: any[]) => {
+        apexchart.exec('6001', 'updateSeries', [{data: handleChartData(hourlyChart)}])
+    }
+
+    const handleChartData= (chartData: any[]) => {
+       return chartData.map(item => {
+            const { open, high, low, close, date, reqId } = item
+            const priceLevels = [open, high, low, close]
+            if(!date || !priceLevels || priceLevels.includes(-1)) return
+            return {
+                x: date, 
+                y: priceLevels
+            }
+        }).filter(item => !!item)
+    }
 
 
     return (
-        <Flex margin={'2rem 0'}>
-            {stocksSeries.length ? stocksSeries.map(series => {
-               return <Chart
-                    type="candlestick"
-                    options={chartOptions}
-                    series={series.series}
-                    width={1300}
-                    height={800}
-                />
-            }) : <Spinner size='lg' />}
-
+        <Flex margin={'2rem 0'} flexWrap={'wrap'} padding={"0 2rem"} justifyContent={'space-between'} >
+            <ReactApexChart
+                type="candlestick"
+                options={DailyChartOptions}
+                series={[]}
+                width={500}
+                height={500}
+            />
+            <ReactApexChart
+                type="candlestick"
+                options={HourlyChartOptions}
+                series={[]}
+                width={500}
+                height={500}
+            />
+            {/* <Chart
+                key={stockMinuteSeries.reqId}
+                type="candlestick"
+                options={staticChartOptions}
+                series={[{ data: stockMinuteSeries.series[0].data }]}
+                width={500}
+                height={500}
+            /> */}
+            {/* <Center flex={1}><Spinner size='xl' speed='0.65s' thickness='6px' /></Center> */}
         </Flex>
     )
 }
