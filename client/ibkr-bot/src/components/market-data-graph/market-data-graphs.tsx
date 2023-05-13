@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import apexchart, { ApexOptions } from "apexcharts";
+import React, { useEffect } from "react";
+import apexchart from "apexcharts";
 import { Center, Flex, Spinner } from "@chakra-ui/react";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import ReactApexChart from "react-apexcharts";
@@ -7,20 +7,8 @@ import { DailyChartOptions, HourlyChartOptions } from "../../consts/apexChartOpt
 
 
 export const MarketDataGraphs: React.FC = (props) => {
-    // const [stockMinuteSeries, setMinuteSeries] = useState<CustomChart>({
-    //     reqId: 6002,
-    //     options: {
-    //         ...staticChartOptions,
-    //         chart: {
-    //             id: '6002'
-    //         }
-    //     },
-    //     series: [{ data: [] }]
-    // })
-
-
     const { ws, message, error } = useWebSocket('ws://localhost:8080')
-
+    
     useEffect(() => {
         if (!message || !message.length) return
         const dailyChart = message.filter(data => data.reqId === 6000)

@@ -1,61 +1,48 @@
 import { Box } from '@chakra-ui/react'
+import { useMutation } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { Text } from "@chakra-ui/react";
 import { ReactSearchAutocomplete } from 'react-search-autocomplete'
-const items = [
-    {
-        id: 0,
-        name: 'Cobol'
-    },
-    {
-        id: 1,
-        name: 'JavaScript'
-    },
-    {
-        id: 2,
-        name: 'Basic'
-    },
-    {
-        id: 3,
-        name: 'PHP'
-    },
-    {
-        id: 4,
-        name: 'Java'
-    }
-]
+import { getCompanies } from '../../api/get-companies/get-companies'
+import { useFormattedData } from '../../hooks/useFormattedData'
+import { Company } from '../../types/company-api'
+
 export const SearchCompany: React.FC = () => {
-    const handleOnSearch = (string, results) => {
-        console.log(string, results)
+    const [formattedData, setFormattedData] = useState<Company[]>([])
+    const { mutate, isLoading } = useMutation({
+        mutationFn: (searchValue: string) => getCompanies(searchValue),
+        onSuccess(data, variables, context) {
+            setFormattedData(useFormattedData(data))
+        },
+
+    })
+
+    const handleOnSearch = (searchValue: string, results: any) => {
+        if (searchValue.length < 2) return
+        mutate(searchValue)
     }
 
-    const handleOnHover = (result) => {
-        console.log(result)
-    }
-
-    const handleOnSelect = (item) => {
-
+    const handleOnSelect = (item: Company) => {
         console.log(item)
     }
 
-    const handleOnFocus = () => {
-        console.log('Focused')
-    }
-
-    const formatResult = (item) => {
+    const formatResult = (item: Company) => {
         return (
-            <>
-                <span style={{ display: 'block', textAlign: 'left' }}>id: {item.id}</span>
-                <span style={{ display: 'block', textAlign: 'left' }}>name: {item.name}</span>
-            </>
+            <div key={item.cik}>
+                <Text as='b'>{item.ticker}</Text><br/>
+                <Text as='i'>{item.name}</Text>
+            </div>
         )
     }
+
     return <Box width={400} margin={'1rem auto'}>
         <ReactSearchAutocomplete
-            items={items}
+            items={formattedData}
             placeholder={"Search Company"}
+            fuseOptions={{ keys: ['name', 'ticker'] }}
             onSearch={handleOnSearch}
-            onHover={handleOnHover}
             onSelect={handleOnSelect}
-            onFocus={handleOnFocus}
+            inputDebounce={300}
             autoFocus
             formatResult={formatResult}
         />
