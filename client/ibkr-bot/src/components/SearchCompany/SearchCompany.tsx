@@ -14,7 +14,6 @@ export const SearchCompany: React.FC = () => {
         onSuccess(data, variables, context) {
             setFormattedData(useFormattedData(data))
         },
-
     })
 
     const handleOnSearch = (searchValue: string, results: any) => {
@@ -45,6 +44,9 @@ export const SearchCompany: React.FC = () => {
             inputDebounce={300}
             autoFocus
             formatResult={formatResult}
+            styling={{
+                zIndex: 999
+            }}
         />
     </Box>
 }

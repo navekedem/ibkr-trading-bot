@@ -1,6 +1,6 @@
 export interface MarketData {
     reqId: number;
-    time: string; 
+    time: number; 
     open: number; 
     high: number; 
     low: number; 

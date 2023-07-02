@@ -39,3 +39,13 @@ export const HourlyChartOptions:ApexOptions = {
         id: '6001'
     }
 }
+export const RealTimeChartOptions:ApexOptions = {
+    ...staticChartOptions,
+    title: {
+        text: "Real Time Stock Chart",
+    },
+    chart: {
+        ...staticChartOptions.chart,
+        id: '6003'
+    }
+}
