@@ -3,7 +3,8 @@ import { ApexOptions } from "apexcharts";
 const staticChartOptions: ApexOptions = {
     chart: {
         type: "candlestick",
-        height: 350,
+        height: 800,
+        width: 800,
         toolbar: {
             show: false,
         }
@@ -37,7 +38,7 @@ export const HourlyChartOptions:ApexOptions = {
     chart: {
         ...staticChartOptions.chart,
         id: '6001'
-    }
+    },
 }
 export const RealTimeChartOptions:ApexOptions = {
     ...staticChartOptions,

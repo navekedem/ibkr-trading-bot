@@ -71,24 +71,25 @@ wss.on('connection', (ws: WebSocket) => {
       low,
       close,
       volume,
-      WAP
+      WAP,
     }
     ws.send(JSON.stringify(tickerData))
   })
-  ib.on(EventName.realtimeBar, (reqId: number, time: number, open: number, high: number, low: number, close: number, volume: number, wap: number, count: number) => {
-    const tickerData = {
-      reqId,
-      date: new Date(time),
-      open,
-      high,
-      low,
-      close,
-      volume,
-    }
-    ws.send(
-      JSON.stringify(tickerData)
-    );
-  });
+  // ib.on(EventName.realtimeBar, (reqId: number, time: number, open: number, high: number, low: number, close: number, volume: number, wap: number, count: number) => {
+  //   const tickerData = {
+  //     reqId,
+  //     date: new Date(time),
+  //     open,
+  //     high,
+  //     low,
+  //     close,
+  //     volume,
+  //     isRealTime: true,
+  //   }
+  //   ws.send(
+  //     JSON.stringify(tickerData)
+  //   );
+  // });
 
 })
 

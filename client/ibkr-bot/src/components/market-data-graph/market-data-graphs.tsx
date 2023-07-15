@@ -4,7 +4,8 @@ import { Center, Flex, Heading, Spinner } from "@chakra-ui/react";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import ReactApexChart from "react-apexcharts";
 import { DailyChartOptions, HourlyChartOptions, RealTimeChartOptions } from "../../consts/apexChartOptions";
-
+import { handleChartData } from "../../utils/handleChartData";
+import { createAnnotationsLines } from "../../utils/createAnnotationsLines";
 
 export const MarketDataGraphs: React.FC = (props) => {
     const { ws, message, error } = useWebSocket('ws://localhost:8080')
@@ -15,38 +16,34 @@ export const MarketDataGraphs: React.FC = (props) => {
         handleDailyChart(dailyChart)
         const hourlyChart = message.filter(data => data.reqId === 6001)
         handleHourlyChart(hourlyChart)
-        const realTimeData = message.filter(data => data.reqId === 6003)
-        handleRealTimeChart(realTimeData)
+        // const realTimeData = message.filter(data => data.reqId === 6003)
+        // handleRealTimeChart(realTimeData)
     }, [message])
 
 
     const handleDailyChart = (dailyChart: any[]) => {
-        apexchart.exec('6000', 'updateSeries', [{ data: handleChartData(dailyChart), name: 'candle',
-        type: 'candlestick' }])
+        apexchart.exec('6000', 'updateOptions', createAnnotationsLines(dailyChart, DailyChartOptions))
+        apexchart.exec('6000', 'updateSeries', [{
+            data: handleChartData(dailyChart), name: 'candle',
+            type: 'candlestick'
+        }])
     }
 
     const handleHourlyChart = (hourlyChart: any[]) => {
-        apexchart.exec('6001', 'updateSeries', [{ data: handleChartData(hourlyChart), name: 'candle',
-        type: 'candlestick' }])
+        const hourlySeries = [{
+            data: handleChartData(hourlyChart), name: 'candle',
+            type: 'candlestick'
+        }]
+        apexchart.exec('6001', 'updateOptions', createAnnotationsLines(hourlyChart, HourlyChartOptions))
+        apexchart.exec('6001', 'updateSeries', hourlySeries)
     }
 
     const handleRealTimeChart = (realTime: any[]) => {
-        apexchart.exec('6003', 'updateSeries', [{ data: handleChartData(realTime),  name: 'candle',
-        type: 'candlestick' }])
+        apexchart.exec('6003', 'updateSeries', [{
+            data: handleChartData(realTime), name: 'candle',
+            type: 'candlestick'
+        }])
     }
-
-    const handleChartData = (chartData: any[]) => {
-        return chartData.map(item => {
-            const { open, high, low, close, date } = item
-            const priceLevels = [open, high, low, close]
-            if (!date || !priceLevels || priceLevels.includes(-1)) return
-            return {
-                x: date,
-                y: priceLevels
-            }
-        }).filter(item => !!item)
-    }
-
 
     return (
         <Flex margin={'2rem 0'} flexWrap={'wrap'} padding={"0 2rem"} justifyContent={'space-between'} >
@@ -55,23 +52,17 @@ export const MarketDataGraphs: React.FC = (props) => {
                     type="candlestick"
                     options={DailyChartOptions}
                     series={[]}
-                    width={500}
-                    height={500}
                 />
                 <ReactApexChart
                     type="candlestick"
                     options={HourlyChartOptions}
                     series={[]}
-                    width={500}
-                    height={500}
                 />
-                <ReactApexChart
+                {/* <ReactApexChart
                     type="candlestick"
                     options={RealTimeChartOptions}
                     series={[]}
-                    width={500}
-                    height={500}
-                />
+                /> */}
             </>}
         </Flex>
     )
