@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function useWebSocket(url: string) {
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [message, setMessage] = useState<any[]>([]);
+  const [message, setMessage] = useState();
   const [error, setError] = useState<any>(null);
 
   useEffect(() => {
@@ -12,9 +12,12 @@ export function useWebSocket(url: string) {
       setWs(socket);
     };
 
-    socket.onmessage = (event) => {
-      setMessage(prevState => [...prevState, JSON.parse(event.data)]);
-    };
+    // socket.onmessage = (event) => {
+    //   // setMessage(prevState => [...prevState, JSON.parse(event.data)]);
+    //   // console.log(JSON.parse(event.data))
+    //   dailyChartDataRef.current = [...dailyChartDataRef.current, JSON.parse(event.data)]
+    //   setMessage(JSON.parse(event.data));
+    // };
 
     socket.onclose = () => {
       setError('WebSocket closed');

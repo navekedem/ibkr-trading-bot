@@ -29,6 +29,8 @@ if (!connected) {
   ib.connect();
 }
 
+// app.ws()
+
 app.get('/get-stock-data', function (req: Request, res: Response) {
   // handle WebSocket connections
   wss.on('connection', function (ws: WebSocket) {
@@ -58,7 +60,7 @@ wss.on('connection', (ws: WebSocket) => {
   })
   ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
   ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-  // ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
+  ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
   ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
 
 

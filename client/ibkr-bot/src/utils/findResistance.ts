@@ -12,7 +12,7 @@ export const findResistance = (marketData: MarketData[]) => {
                 && array[index + 1].high > value.high) {
                 return true;
             }
-        }).sort((a, b) => a.high - b.high);
+        }).sort((a, b) => b.high - a.high);
 
 
     const uniqueResistanceLines: AnnotationLine[] = [];
