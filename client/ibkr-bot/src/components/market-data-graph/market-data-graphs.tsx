@@ -7,6 +7,18 @@ import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions, RealTimeCha
 import { handleChartData } from "../../utils/handleChartData";
 import { createAnnotationsLines } from "../../utils/createAnnotationsLines";
 import { MarketData } from "../../types/market-data";
+import { LayoutGrid } from "../LayoutGrid/LayoutGrid";
+import { Layouts } from "react-grid-layout";
+
+
+const ChartsLayout: Layouts = {
+    lg: [
+        { i: "day", x: 0, y: 0, w: 6, h: 5, minW: 4, minH: 5 },
+        { i: "hour", x: 6, y: 0, w: 6, h: 5, minW: 4, minH: 5 },
+        { i: "minute", x: 0, y: 1, w: 12, h: 5, minW: 4, minH: 5 },
+    ],
+};
+
 
 export const MarketDataGraphs: React.FC = (props) => {
     const { ws, message, error } = useWebSocket('ws://localhost:8080')
@@ -17,6 +29,7 @@ export const MarketDataGraphs: React.FC = (props) => {
     useEffect(() => {
         if (!ws) return
         ws.onmessage = (event) => {
+            console.log(event)
             const data = JSON.parse(event.data)
             if (data.reqId === 6000) setDailyChartData(prevState => [...prevState, data])
             if (data.reqId === 6001) setHourlyChartData(prevState => [...prevState, data])
@@ -36,20 +49,12 @@ export const MarketDataGraphs: React.FC = (props) => {
     }
 
     return (
-        <Flex margin={'2rem 0'} flexWrap={'wrap'} padding={"0 2rem"} justifyContent={'space-between'} >
-            {/* {!message || !message.length ? <Center flex={1}><Heading>Please Select a stock for trade</Heading></Center> : <>
-               
-            </>} */}
-            {/* <ReactApexChart
-                    type="candlestick"
-                    options={RealTimeChartOptions}
-                    series={[]}
-                /> */}
+        <LayoutGrid layouts={ChartsLayout}>
             <ReactApexChart
                 type="candlestick"
+                key={"day"}
                 options={createAnnotationsLines(dailyChartData, DailyChartOptions)}
                 height={500}
-                width={800}
                 series={[{
                     data: handleChartData(dailyChartData), name: 'candle',
                     type: 'candlestick'
@@ -58,7 +63,7 @@ export const MarketDataGraphs: React.FC = (props) => {
             <ReactApexChart
                 type="candlestick"
                 height={500}
-                width={800}
+                key={"hour"}
                 options={createAnnotationsLines(hourlyChartData, HourlyChartOptions)}
                 series={[{
                     data: handleChartData(hourlyChartData), name: 'candle',
@@ -68,13 +73,15 @@ export const MarketDataGraphs: React.FC = (props) => {
             <ReactApexChart
                 type="candlestick"
                 height={500}
-                width={800}
+                key={"minute"}
                 options={createAnnotationsLines(minutesChartData, MinutesChartOptions)}
                 series={[{
                     data: handleChartData(minutesChartData), name: 'candle',
                     type: 'candlestick'
                 }]}
             />
-        </Flex>
+
+        </LayoutGrid>
+
     )
 }

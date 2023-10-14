@@ -5,6 +5,7 @@ const staticChartOptions: ApexOptions = {
         type: "candlestick",
         height: 800,
         width: 800,
+        redrawOnParentResize: true,
         toolbar: {
             show: false,
         }

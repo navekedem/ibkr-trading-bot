@@ -61,7 +61,7 @@ wss.on('connection', (ws: WebSocket) => {
   ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
   ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
   ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
-  ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
+  // ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
 
 
   ib.on(EventName.historicalData, (reqId: number, time: string, open: number, high: number, low: number, close: number, volume: number, count: number | undefined, WAP: number, hasGaps: boolean | undefined) => {
@@ -75,6 +75,7 @@ wss.on('connection', (ws: WebSocket) => {
       volume,
       WAP,
     }
+    console.log(tickerData)
     ws.send(JSON.stringify(tickerData))
   })
   // ib.on(EventName.realtimeBar, (reqId: number, time: number, open: number, high: number, low: number, close: number, volume: number, wap: number, count: number) => {

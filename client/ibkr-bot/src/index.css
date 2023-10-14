@@ -18,3 +18,12 @@ body {
   min-height: 100vh;
 }
 
+
+.block {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  padding: 10px;
+}
+.apexcharts-title-text:hover {
+  cursor: grabbing;
+}
