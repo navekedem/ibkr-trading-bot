@@ -1,5 +1,5 @@
 import { ApexOptions } from "apexcharts";
-import { MarketData } from "../types/market-data";
+import { MarketData } from "../../../../types/market-data";
 import { findResistance } from "./findResistance";
 import { findSupport } from "./findSupport";
 

@@ -5,7 +5,7 @@ import { Text } from "@chakra-ui/react";
 import { ReactSearchAutocomplete } from 'react-search-autocomplete'
 import { getCompanies } from '../../api/get-companies/get-companies'
 import { useFormattedData } from '../../hooks/useFormattedData'
-import { Company } from '../../types/company-api'
+import { Company } from '../../../../../types/company-api'
 
 export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {
     const [formattedData, setFormattedData] = useState<Company[]>([])

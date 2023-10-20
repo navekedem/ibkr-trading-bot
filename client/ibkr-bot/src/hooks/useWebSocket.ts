@@ -12,13 +12,6 @@ export function useWebSocket(url: string) {
       setWs(socket);
     };
 
-    // socket.onmessage = (event) => {
-    //   // setMessage(prevState => [...prevState, JSON.parse(event.data)]);
-    //   // console.log(JSON.parse(event.data))
-    //   dailyChartDataRef.current = [...dailyChartDataRef.current, JSON.parse(event.data)]
-    //   setMessage(JSON.parse(event.data));
-    // };
-
     socket.onclose = () => {
       setError('WebSocket closed');
     };
