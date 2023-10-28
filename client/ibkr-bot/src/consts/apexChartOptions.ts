@@ -1,6 +1,9 @@
 import { ApexOptions } from "apexcharts";
 
 const staticChartOptions: ApexOptions = {
+    title: {
+        text: "",
+    },
     chart: {
         type: "candlestick",
         height: 800,
@@ -23,9 +26,6 @@ const staticChartOptions: ApexOptions = {
 
 export const DailyChartOptions:ApexOptions = {
     ...staticChartOptions,
-    title: {
-        text: "Daily Stock Chart",
-    },
     chart: {
         ...staticChartOptions.chart,
         id: '6000'
@@ -33,9 +33,6 @@ export const DailyChartOptions:ApexOptions = {
 }
 export const HourlyChartOptions:ApexOptions = {
     ...staticChartOptions,
-    title: {
-        text: "Hourly Stock Chart",
-    },
     chart: {
         ...staticChartOptions.chart,
         id: '6001'
@@ -43,9 +40,6 @@ export const HourlyChartOptions:ApexOptions = {
 }
 export const MinutesChartOptions:ApexOptions = {
     ...staticChartOptions,
-    title: {
-        text: "Minutes Stock Chart",
-    },
     chart: {
         ...staticChartOptions.chart,
         id: '6002'
@@ -53,9 +47,6 @@ export const MinutesChartOptions:ApexOptions = {
 }
 export const RealTimeChartOptions:ApexOptions = {
     ...staticChartOptions,
-    title: {
-        text: "Real Time Stock Chart",
-    },
     chart: {
         ...staticChartOptions.chart,
         id: '6003'

@@ -10,6 +10,10 @@ export interface MarketData {
 }
 
 
+export const isMarketData = (data: MarketData | null): data is MarketData => {
+    if (!data) return false
+    return (data as MarketData).reqId !== undefined;
+}
 
 export interface AnnotationLine {
     value: number; 

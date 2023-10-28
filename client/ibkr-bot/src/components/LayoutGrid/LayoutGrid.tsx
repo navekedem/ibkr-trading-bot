@@ -20,7 +20,7 @@ const defaultProps = {
     measureBeforeMount: false,
     useCSSTransforms: true,
     margin: [20, 20] as [number, number],
-    draggableHandle: ".apexcharts-title-text",
+    draggableHandle: ".layout-block-title",
 };
 export const LayoutGrid: React.FC<LayoutGridProps> = (props) => {
     const { children, ...rest } = props;

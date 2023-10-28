@@ -34,12 +34,14 @@ if (!connected) {
 
 wss.on('connection', (ws: WebSocket) => {
   ws.on('message', (message: string) => {
+    if(!message) return;
     console.log(`Recived Message => ${message}`);
+    const contract = new Stock(message, undefined, 'USD')
+    ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+    ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+    ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
+    ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
   })
-  ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-  ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-  ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
-  ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
 
   ib.on(EventName.historicalData, (reqId: number, time: string, open: number, high: number, low: number, close: number, volume: number, count: number | undefined, WAP: number, hasGaps: boolean | undefined) => {
     const tickerData = {
@@ -57,7 +59,7 @@ wss.on('connection', (ws: WebSocket) => {
   ib.on(EventName.realtimeBar, (reqId: number, time: number, open: number, high: number, low: number, close: number, volume: number, wap: number, count: number) => {
     const tickerData = {
       reqId,
-      date: new Date(time * 1000),
+      date: new Date(time * 1000).getTime(),
       open,
       high,
       low,

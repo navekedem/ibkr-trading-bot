@@ -3,6 +3,7 @@
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
+  height: 100% !important;
   color-scheme: light dark;
   color: #000;
   font-synthesis: none;
@@ -15,15 +16,17 @@
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
+  min-height: 100vh !important;
 }
 
-
+#root {
+  height: 100%;
+}
 .block {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
   border-radius: 5px;
   padding: 10px;
 }
-.apexcharts-title-text:hover {
+.layout-block-title:hover {
   cursor: grabbing;
 }

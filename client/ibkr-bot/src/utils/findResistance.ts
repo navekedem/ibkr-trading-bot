@@ -4,7 +4,7 @@ import { findAverageBarHeight } from "./findAverageBarHeight";
 export const findResistance = (marketData: MarketData[]) => {
     if (!marketData || !marketData.length) return []
     const resistanceLines = marketData
-        .filter(candlestick => candlestick.date > 0)
+        .filter(candlestick => candlestick?.date > 0)
         .filter((value, index, array) => {
             if (index > 0
                 && index < (array.length - 2)

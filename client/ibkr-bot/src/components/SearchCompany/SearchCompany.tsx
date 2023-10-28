@@ -4,15 +4,15 @@ import { useState } from 'react'
 import { Text } from "@chakra-ui/react";
 import { ReactSearchAutocomplete } from 'react-search-autocomplete'
 import { getCompanies } from '../../api/get-companies/get-companies'
-import { useFormattedData } from '../../hooks/useFormattedData'
 import { Company } from '../../../../../types/company-api'
+import { formatData } from '../../utils/formatApiData';
 
 export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {
     const [formattedData, setFormattedData] = useState<Company[]>([])
     const { mutate, isLoading } = useMutation({
         mutationFn: (searchValue: string) => getCompanies(searchValue),
         onSuccess(data, variables, context) {
-            setFormattedData(useFormattedData(data))
+            setFormattedData(formatData(data))
         },
     })
 
