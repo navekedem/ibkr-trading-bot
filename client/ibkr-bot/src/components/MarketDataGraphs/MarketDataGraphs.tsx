@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
-import { Center, Flex, Heading, Spinner, Box, Stack, Button } from "@chakra-ui/react";
+import { Center, Heading, Box, } from "@chakra-ui/react";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import ReactApexChart from "react-apexcharts";
-import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions, RealTimeChartOptions } from "../../consts/apexChartOptions";
+import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions } from "../../consts/apexChartOptions";
 import { handleChartData } from "../../utils/handleChartData";
 import { createAnnotationsLines } from "../../utils/createAnnotationsLines";
 import { MarketData, isMarketData } from "../../../../../types/market-data";
@@ -47,24 +46,29 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
         };
     }, [ws])
 
+    const openInterval = () => {
+        setInterval(() => {
+            if (!isMarketData(minuteCandleStick.current)) return
+        
+            setMinutesChartData(prevState => [...prevState, minuteCandleStick.current as MarketData].filter(Boolean))
+            minuteCandleStick.current = null
+        }, 60000);
+    }
+    
     useMemo(() => {
         if (!selectedStock) return
         initCharts();
+        // openInterval();
+        minuteCandleStick.current = null;
         ws?.send(selectedStock.ticker)
     }, [selectedStock])
 
 
-    setInterval(() => {
-        if (!isMarketData(minuteCandleStick.current)) return
-        console.log("minute candle", minuteCandleStick.current)
-        setMinutesChartData(prevState => [...prevState, minuteCandleStick.current as MarketData])
-        minuteCandleStick.current = null
-    }, 60000);
 
     const calcMinuteBar = (data: MarketData) => {
-        const { high, low, close } = data
+        const { high, low, close, date } = data
         if (!minuteCandleStick.current) {
-            minuteCandleStick.current = { ...data, date: data.date * 60000 }
+            minuteCandleStick.current = { ...data, date: (data.date - 5000) + 60000 }
         } else {
             minuteCandleStick.current = {
                 ...minuteCandleStick.current,
@@ -73,6 +77,8 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                 close: close
             }
         }
+        if(date > minuteCandleStick.current.date) return minuteCandleStick.current = null
+        setMinutesChartData(prevState => [...prevState, minuteCandleStick.current as MarketData].filter(Boolean))
     }
 
     return (

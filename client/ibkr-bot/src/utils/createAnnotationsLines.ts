@@ -22,7 +22,7 @@ export const createAnnotationsLines = (chartData: MarketData[], options: ApexOpt
     }
     const optionsWithAnnotations = {
         ...options,
-        annotations: annotations,
+        // annotations: annotations,
     }
     return optionsWithAnnotations
     

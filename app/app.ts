@@ -65,7 +65,6 @@ wss.on('connection', (ws: WebSocket) => {
       low,
       close,
       volume,
-      isRealTime: true,
     }
     ws.send(
       JSON.stringify(tickerData)
