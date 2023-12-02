@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Center, Heading, Box, } from "@chakra-ui/react";
+import { Center, Heading, Box, flatten, } from "@chakra-ui/react";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import ReactApexChart from "react-apexcharts";
 import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions } from "../../consts/apexChartOptions";
-import { handleChartData } from "../../utils/handleChartData";
+import { handleChartData, handleSingleCandle } from "../../utils/handleChartData";
 import { createAnnotationsLines } from "../../utils/createAnnotationsLines";
-import { MarketData, isMarketData } from "../../../../../types/market-data";
+import { MarketData } from "../../../../../types/market-data";
 import { LayoutGrid } from "../LayoutGrid/LayoutGrid";
 import { Layouts } from "react-grid-layout";
 import { Company } from "../../../../../types/company-api";
@@ -22,17 +22,18 @@ const ChartsLayout: Layouts = {
 
 
 export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ selectedStock }) => {
-    const { ws, message, error } = useWebSocket('ws://localhost:8080')
+    const { ws } = useWebSocket('ws://localhost:8080')
     const [dailyChartData, setDailyChartData] = useState<MarketData[]>([])
     const [hourlyChartData, setHourlyChartData] = useState<MarketData[]>([])
     const [minutesChartData, setMinutesChartData] = useState<MarketData[]>([])
-    const minuteCandleStick = useRef<MarketData | null>(null)
+    const newMinutesChartData = useRef<MarketData[]>([])
+    const [minuteCandleStick, setMinuteCandleStick] = useState<MarketData | null>(null)
 
     const initCharts = () => {
         setDailyChartData([])
         setHourlyChartData([])
         setMinutesChartData([])
-        minuteCandleStick.current = null
+        setMinuteCandleStick(null)
     }
 
     useEffect(() => {
@@ -46,20 +47,12 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
         };
     }, [ws])
 
-    const openInterval = () => {
-        setInterval(() => {
-            if (!isMarketData(minuteCandleStick.current)) return
-        
-            setMinutesChartData(prevState => [...prevState, minuteCandleStick.current as MarketData].filter(Boolean))
-            minuteCandleStick.current = null
-        }, 60000);
-    }
-    
+
+
     useMemo(() => {
         if (!selectedStock) return
         initCharts();
-        // openInterval();
-        minuteCandleStick.current = null;
+        setMinuteCandleStick(null);
         ws?.send(selectedStock.ticker)
     }, [selectedStock])
 
@@ -67,19 +60,32 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
 
     const calcMinuteBar = (data: MarketData) => {
         const { high, low, close, date } = data
-        if (!minuteCandleStick.current) {
-            minuteCandleStick.current = { ...data, date: (data.date - 5000) + 60000 }
+        if (!minuteCandleStick) {
+            setMinuteCandleStick(handleSingleCandle({ ...data, date: (data.date - 5000) + 60000 }))
         } else {
-            minuteCandleStick.current = {
-                ...minuteCandleStick.current,
-                high: high > minuteCandleStick.current.high ? high : minuteCandleStick.current.high,
-                low: low < minuteCandleStick.current.low ? low : minuteCandleStick.current.low,
+            setMinuteCandleStick(handleSingleCandle({
+                ...minuteCandleStick,
+                high: high > minuteCandleStick.high ? high : minuteCandleStick.high,
+                low: low < minuteCandleStick.low ? low : minuteCandleStick.low,
                 close: close
-            }
+            }))
         }
-        if(date > minuteCandleStick.current.date) return minuteCandleStick.current = null
-        setMinutesChartData(prevState => [...prevState, minuteCandleStick.current as MarketData].filter(Boolean))
+        if(!minuteCandleStick?.date) return
+        if (date > minuteCandleStick?.date) {
+            newMinutesChartData.current.push(minuteCandleStick!) 
+            setMinuteCandleStick(null)
+        }
     }
+
+    useEffect(() => {
+        if (!minuteCandleStick) return
+        const newData = [...handleChartData(minutesChartData), ...handleChartData(newMinutesChartData.current), minuteCandleStick as MarketData]
+        // console.log(newData)
+        ApexCharts.exec(MinutesChartOptions.chart?.id!, 'updateSeries', [{
+            data: newData, name: 'candle',
+            type: 'candlestick'
+        }])
+    }, [minuteCandleStick])
 
     return (
         <>
@@ -93,7 +99,7 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                             <LayoutItemTitle title="Daily Chart" chartId={DailyChartOptions.chart?.id!} />
                             <ReactApexChart
                                 type="candlestick"
-                                options={createAnnotationsLines(dailyChartData, DailyChartOptions)}
+                                options={createAnnotationsLines(dailyChartData, DailyChartOptions, false)}
                                 height={500}
                                 series={[{
                                     data: handleChartData(dailyChartData), name: 'candle',
@@ -106,7 +112,7 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                             <ReactApexChart
                                 type="candlestick"
                                 height={500}
-                                options={createAnnotationsLines(hourlyChartData, HourlyChartOptions)}
+                                options={createAnnotationsLines(hourlyChartData, HourlyChartOptions, false)}
                                 series={[{
                                     data: handleChartData(hourlyChartData), name: 'candle',
                                     type: 'candlestick'
@@ -118,7 +124,7 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                             <ReactApexChart
                                 type="candlestick"
                                 height={500}
-                                options={createAnnotationsLines(minutesChartData, MinutesChartOptions)}
+                                options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
                                 series={[{
                                     data: handleChartData(minutesChartData), name: 'candle',
                                     type: 'candlestick'

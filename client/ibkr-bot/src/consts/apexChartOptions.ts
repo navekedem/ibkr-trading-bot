@@ -24,28 +24,35 @@ const staticChartOptions: ApexOptions = {
 }
 
 
-export const DailyChartOptions:ApexOptions = {
+export const DailyChartOptions: ApexOptions = {
     ...staticChartOptions,
     chart: {
         ...staticChartOptions.chart,
         id: '6000'
     }
 }
-export const HourlyChartOptions:ApexOptions = {
+export const HourlyChartOptions: ApexOptions = {
     ...staticChartOptions,
     chart: {
         ...staticChartOptions.chart,
         id: '6001'
     },
 }
-export const MinutesChartOptions:ApexOptions = {
+export const MinutesChartOptions: ApexOptions = {
     ...staticChartOptions,
     chart: {
         ...staticChartOptions.chart,
-        id: '6002'
+        id: '6002',
+        animations: {
+            enabled: true,
+            easing: 'linear',
+            dynamicAnimation: {
+                speed: 1000
+            }
+        },
     },
 }
-export const RealTimeChartOptions:ApexOptions = {
+export const RealTimeChartOptions: ApexOptions = {
     ...staticChartOptions,
     chart: {
         ...staticChartOptions.chart,

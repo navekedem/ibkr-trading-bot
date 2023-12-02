@@ -7,7 +7,7 @@ import { MarketData } from "../types/market-data";
 const wss = new WebSocket.Server({ port: 8080 });
 let connected = false;
 const ib = new IBApi({ port: 7497, });
-const contract = new Stock('AAPL', undefined, 'USD')
+
 
 ib.on(EventName.result, (event: string, args: string[]) => {
   // console.log(`${event} ${JSON.stringify(args)}`)
