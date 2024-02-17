@@ -8,6 +8,9 @@ export const createAnnotationsLines = (chartData: MarketData[], options: ApexOpt
     let entryPoints: PointAnnotations[] = [];
     const support = findSupport(chartData)
     const resistance = findResistance(chartData)
+    console.log(support)
+    console.log(resistance)
+    console.log(chartData)
     const annotationsLines = [...support, ...resistance]
     // if (searchEntryPoint) entryPoints.push(findEntryPoint(chartData, support, resistance))
     const annotations = {
@@ -30,7 +33,7 @@ export const createAnnotationsLines = (chartData: MarketData[], options: ApexOpt
     const optionsWithAnnotations: ApexOptions = {
         ...options,
         annotations: annotations,
-       
+
     }
     return optionsWithAnnotations
 

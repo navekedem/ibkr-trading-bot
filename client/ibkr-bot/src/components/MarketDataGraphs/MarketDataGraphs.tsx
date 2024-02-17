@@ -27,13 +27,12 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
     const [hourlyChartData, setHourlyChartData] = useState<MarketData[]>([])
     const [minutesChartData, setMinutesChartData] = useState<MarketData[]>([])
     const newMinutesChartData = useRef<MarketData[]>([])
-    const [minuteCandleStick, setMinuteCandleStick] = useState<MarketData | null>(null)
+
 
     const initCharts = () => {
         setDailyChartData([])
         setHourlyChartData([])
         setMinutesChartData([])
-        setMinuteCandleStick(null)
     }
 
     useEffect(() => {
@@ -43,7 +42,7 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
             if (data.reqId === 6000) setDailyChartData(prevState => [...prevState, data])
             if (data.reqId === 6001) setHourlyChartData(prevState => [...prevState, data])
             if (data.reqId === 6002) setMinutesChartData(prevState => [...prevState, data])
-            if (data.reqId === 6003) calcMinuteBar(data)
+            if (data.reqId === 6003) setMinutesChartData(prevState => [...prevState, data])
         };
     }, [ws])
 
@@ -52,40 +51,20 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
     useMemo(() => {
         if (!selectedStock) return
         initCharts();
-        setMinuteCandleStick(null);
+        // setMinuteCandleStick(null);
         ws?.send(selectedStock.ticker)
     }, [selectedStock])
 
 
-
-    const calcMinuteBar = (data: MarketData) => {
-        const { high, low, close, date } = data
-        if (!minuteCandleStick) {
-            setMinuteCandleStick(handleSingleCandle({ ...data, date: (data.date - 5000) + 60000 }))
-        } else {
-            setMinuteCandleStick(handleSingleCandle({
-                ...minuteCandleStick,
-                high: high > minuteCandleStick.high ? high : minuteCandleStick.high,
-                low: low < minuteCandleStick.low ? low : minuteCandleStick.low,
-                close: close
-            }))
-        }
-        if(!minuteCandleStick?.date) return
-        if (date > minuteCandleStick?.date) {
-            newMinutesChartData.current.push(minuteCandleStick!) 
-            setMinuteCandleStick(null)
-        }
-    }
-
-    useEffect(() => {
-        if (!minuteCandleStick) return
-        const newData = [...handleChartData(minutesChartData), ...handleChartData(newMinutesChartData.current), minuteCandleStick as MarketData]
-        // console.log(newData)
-        ApexCharts.exec(MinutesChartOptions.chart?.id!, 'updateSeries', [{
-            data: newData, name: 'candle',
-            type: 'candlestick'
-        }])
-    }, [minuteCandleStick])
+    // useEffect(() => {
+    //     if (!minuteCandleStick) return
+    //     const newData = [...handleChartData(minutesChartData), ...handleChartData(newMinutesChartData.current), minuteCandleStick as MarketData]
+    //     // console.log(newData)
+    //     ApexCharts.exec(MinutesChartOptions.chart?.id!, 'updateSeries', [{
+    //         data: newData, name: 'candle',
+    //         type: 'candlestick'
+    //     }])
+    // }, [minuteCandleStick])
 
     return (
         <>
