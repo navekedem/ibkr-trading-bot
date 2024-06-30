@@ -41,8 +41,9 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
             const data = JSON.parse(event.data)
             if (data.reqId === 6000) setDailyChartData(prevState => [...prevState, data])
             if (data.reqId === 6001) setHourlyChartData(prevState => [...prevState, data])
-            if (data.reqId === 6002) setMinutesChartData(prevState => [...prevState, data])
-            if (data.reqId === 6003) setMinutesChartData(prevState => [...prevState, data])
+            if (data.reqId === 6002) {
+                setMinutesChartData(prevState => [...prevState, data])
+            }
         };
     }, [ws])
 
@@ -56,15 +57,14 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
     }, [selectedStock])
 
 
-    // useEffect(() => {
-    //     if (!minuteCandleStick) return
-    //     const newData = [...handleChartData(minutesChartData), ...handleChartData(newMinutesChartData.current), minuteCandleStick as MarketData]
-    //     // console.log(newData)
-    //     ApexCharts.exec(MinutesChartOptions.chart?.id!, 'updateSeries', [{
-    //         data: newData, name: 'candle',
-    //         type: 'candlestick'
-    //     }])
-    // }, [minuteCandleStick])
+    useEffect(() => {
+        if (!minutesChartData || !minutesChartData.length) return
+        // console.log(minutesChartData)
+        ApexCharts.exec(MinutesChartOptions.chart?.id!, 'updateSeries', [{
+            data: handleChartData(minutesChartData), name: 'candle',
+            type: 'candlestick'
+        }])
+    }, [minutesChartData])
 
     return (
         <>
@@ -104,10 +104,10 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                                 type="candlestick"
                                 height={500}
                                 options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
-                                series={[{
-                                    data: handleChartData(minutesChartData), name: 'candle',
-                                    type: 'candlestick'
-                                }]}
+                            // series={[{
+                            //     data: handleChartData(minutesChartData), name: 'candle',
+                            //     type: 'candlestick'
+                            // }]}
                             />
                         </Box>
                     </LayoutGrid>

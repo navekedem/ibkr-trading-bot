@@ -14,12 +14,15 @@
   "version": "1.0.0",
   "main": "app.ts",
   "scripts": {
-    "test": "npm run test",
+    "test": "test",
     "tsc": "tsc",
     "dev": "ts-node-dev --respawn --transpile-only ./app/app.ts",
     "prod": "tsc && node ./build/app.js"
   },
   "author": "nave kedem",
   "license": "ISC",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "@gradio/client": "^1.2.1"
+  }
 }

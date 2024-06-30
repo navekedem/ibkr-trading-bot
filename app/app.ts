@@ -1,79 +1,132 @@
-import { IBApi, EventName, ErrorCode, Contract, Stock, BarSizeSetting, Bar } from "@stoqey/ib";
-import WebSocket from 'ws'
-import Alpaca from "@alpacahq/alpaca-trade-api";
-import { MarketData } from "../types/market-data";
+import { BarSizeSetting, ErrorCode, EventName, IBApi, Stock } from '@stoqey/ib';
+import WebSocket from 'ws';
+
+// const app = express();
+// const server = http.createServer(app)
 const wss = new WebSocket.Server({ port: 8080 });
-const alpaca = new Alpaca({
-  keyId: 'PK0QA42MWURMF476WSJC',
-  secretKey: 'tNd1pISH73KjhAfGqSyV9aerpyP8oEQNisf3JTkJ',
-  baseUrl: "https://paper-api.alpaca.markets",
-  paper: true,
-})
-const alpacaWebSocket = alpaca.data_stream_v2
-alpacaWebSocket.connect();
+let connected = false;
+const ib = new IBApi({ port: 7497 });
 
+ib.on(EventName.result, (event: string, args: string[]) => {
+    // console.log(`${event} ${JSON.stringify(args)}`)
+});
+
+ib.on(EventName.connected, () => {
+    connected = true;
+    console.log('Connected!');
+});
+
+ib.on(EventName.disconnected, () => {
+    connected = false;
+    console.log('Disconnected!');
+});
+ib.on(EventName.error, (error: Error, code: ErrorCode, reqId: number) => {
+    connected = false;
+    console.log(error);
+});
+
+if (!connected) {
+    ib.connect();
+}
+
+const aggregationBuffer: any = {};
 wss.on('connection', (ws: WebSocket) => {
-  ws.on('message', async (message: string) => {
-    if (!message) return;
-    console.log(`Recived Message => ${message}`);
-    alpacaWebSocket.subscribeForBars([message]);
-    alpacaWebSocket.onError((err) => {
-      console.log("Error:", err);
+    ws.on('message', (message: string) => {
+        if (!message) return;
+        console.log(`Recived Message => ${message}`);
+        const contract = new Stock(message, undefined, 'USD');
+        ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+        ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+        ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
+        ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
     });
-    const dailyChart = alpaca.getBarsV2('AAPL', {
-      start: "2024-01-02",
-      end: "2024-02-15",
-      timeframe: alpaca.newTimeframe(1, alpaca.timeframeUnit.DAY),
-    })
-    const got = [];
-    for await (let b of dailyChart) {
-      got.push(b);
-    }
-    console.log(got);
-    // const contract = new Stock(message, undefined, 'USD')
-    // ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-    // ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-    // ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
-    // ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
-  })
 
-  alpacaWebSocket.onStockBar((trade) => {
-    console.log("Bar:", trade);
-    const tickerData = {
-      reqId: 6002,
-      date: new Date(trade.Timestamp).getTime(),
-      open: trade.OpenPrice,
-      high: trade.HighPrice,
-      low: trade.LowPrice,
-      close: trade.ClosePrice,
-      volume: trade.Volume
-    }
-    ws.send(
-      JSON.stringify(tickerData)
+    ib.on(
+        EventName.historicalData,
+        (
+            reqId: number,
+            time: string,
+            open: number,
+            high: number,
+            low: number,
+            close: number,
+            volume: number,
+            count: number | undefined,
+            WAP: number,
+            hasGaps: boolean | undefined,
+        ) => {
+            const tickerData = {
+                reqId,
+                date: Date.parse(`${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)} ${time.substring(10)}`),
+                open,
+                high,
+                low,
+                close,
+                volume,
+                WAP,
+            };
+            ws.send(JSON.stringify(tickerData));
+        },
     );
-  });
+    ib.on(
+        EventName.realtimeBar,
+        (reqId: number, time: number, open: number, high: number, low: number, close: number, volume: number, wap: number, count: number) => {
+            if (!aggregationBuffer[reqId]) {
+                aggregationBuffer[reqId] = {
+                    open: null,
+                    high: -Infinity,
+                    low: Infinity,
+                    close: null,
+                    volume: 0,
+                    startTime: Date.now(),
+                };
+            }
 
-})
+            const buffer = aggregationBuffer[reqId];
+            if (buffer.open === null) {
+                buffer.open = open;
+            }
+            buffer.high = Math.max(buffer.high, high);
+            buffer.low = Math.min(buffer.low, low);
+            buffer.close = close; // Always set the close to the last close value within the minute
+            buffer.volume += volume;
 
+            // Check if one minute has passed
+            if (Date.now() - buffer.startTime >= 60000) {
+                // Send aggregated data
 
-
-const getTimeframe = () => {
-  const start = new Date();
-  const end = new Date();
-  start.setMonth(start.getMonth() - 1)
-  return { end, start }
-}
-
-
-const formatAlpacaData = (data: any, reqId: string) => {
-  return data.map((item) => ({
-    reqId,
-    date: item.Timestamp,
-    open: item.OpenPrice,
-    high: item.HighPrice,
-    low: item.LowPrice,
-    close: item.ClosePrice,
-    volume: item.Volume
-  }))
-}
-
+                // Reset the buffer for the next minute
+                aggregationBuffer[reqId] = {
+                    open: null,
+                    high: -Infinity,
+                    low: Infinity,
+                    close: null,
+                    volume: 0,
+                    startTime: Date.now(),
+                };
+            }
+            const aggregatedData = {
+                reqId: reqId,
+                open: buffer.open,
+                high: buffer.high,
+                date: buffer.startTime,
+                low: buffer.low,
+                close: buffer.close,
+                volume: buffer.volume,
+            };
+            ws.send(JSON.stringify(aggregatedData));
+            // const tickerData = {
+            //   reqId,
+            //   date: new Date(time * 1000).getTime(),
+            //   open,
+            //   high,
+            //   low,
+            //   close,
+            //   volume,
+            // }
+            // ws.send(
+            //   JSON.stringify(tickerData)
+            // );
+        },
+    );
+});

@@ -8,12 +8,9 @@ export const createAnnotationsLines = (chartData: MarketData[], options: ApexOpt
     let entryPoints: PointAnnotations[] = [];
     const support = findSupport(chartData)
     const resistance = findResistance(chartData)
-    console.log(support)
-    console.log(resistance)
-    console.log(chartData)
     const annotationsLines = [...support, ...resistance]
     // if (searchEntryPoint) entryPoints.push(findEntryPoint(chartData, support, resistance))
-    const annotations = {
+    const annotations: ApexAnnotations = {
         yaxis: annotationsLines.map(line => ({
             y: line.value,
             borderColor: line.color,
@@ -24,6 +21,7 @@ export const createAnnotationsLines = (chartData: MarketData[], options: ApexOpt
                     color: '#fff',
                     background: line.color
                 },
+                position: 'center',
                 text: `${line.type} price: ${line.value}$`
             }
         })),
