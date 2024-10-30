@@ -1,13 +1,13 @@
-import { Box, Center, Heading } from '@chakra-ui/react';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Button, Center, Flex, Heading } from '@chakra-ui/react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Layouts } from 'react-grid-layout';
-import { Company } from '../../../../../types/company-api';
+import { Company } from '../../../../../types/company';
 import { MarketData } from '../../../../../types/market-data';
 import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions } from '../../consts/apexChartOptions';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { createAnnotationsLines } from '../../utils/createAnnotationsLines';
-import { handleChartData } from '../../utils/handleChartData';
+import { createAnalysis, handleChartData } from '../../utils/handleChartData';
 import { LayoutGrid } from '../LayoutGrid/LayoutGrid';
 import { LayoutItemTitle } from '../LayoutGrid/LayoutItemTitle';
 
@@ -32,6 +32,11 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
         setMinutesChartData([]);
     };
 
+    const sendAnalysis = () => {
+        const analysis = createAnalysis(dailyChartData, selectedStock!);
+        console.log(analysis);
+    };
+
     useEffect(() => {
         if (!ws) return;
         ws.onmessage = (event) => {
@@ -44,16 +49,15 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
         };
     }, [ws]);
 
-    useMemo(() => {
+    useEffect(() => {
         if (!selectedStock) return;
         initCharts();
-        // setMinuteCandleStick(null);
-        ws?.send(selectedStock.ticker);
+
+        ws?.send(JSON.stringify(selectedStock));
     }, [selectedStock]);
 
     useEffect(() => {
         if (!minutesChartData || !minutesChartData.length) return;
-        // console.log(minutesChartData)
         ApexCharts.exec(MinutesChartOptions.chart?.id!, 'updateSeries', [
             {
                 data: handleChartData(minutesChartData),
@@ -74,9 +78,14 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
             ) : (
                 <>
                     <Center>
-                        <Heading textAlign={'center'}>
-                            {selectedStock?.name} {selectedStock?.ticker}
-                        </Heading>
+                        <Flex gap={6} alignItems={'center'}>
+                            <Heading textAlign={'center'}>
+                                {selectedStock?.name} {selectedStock?.ticker}
+                            </Heading>
+                            <Button isLoading={false} onClick={sendAnalysis} loadingText="Saving...">
+                                Send Analysis To AI
+                            </Button>
+                        </Flex>
                     </Center>
                     <LayoutGrid layouts={ChartsLayout}>
                         <Box key={'day'}>
@@ -111,15 +120,20 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                         </Box>
                         <Box key={'minute'}>
                             <LayoutItemTitle title="Minutes Chart" chartId={MinutesChartOptions.chart?.id!} />
-                            <ReactApexChart
-                                type="candlestick"
-                                height={500}
-                                options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
-                                // series={[{
-                                //     data: handleChartData(minutesChartData), name: 'candle',
-                                //     type: 'candlestick'
-                                // }]}
-                            />
+                            {!!minutesChartData.length && (
+                                <ReactApexChart
+                                    type="candlestick"
+                                    height={500}
+                                    options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
+                                    series={[
+                                        {
+                                            data: handleChartData(minutesChartData),
+                                            name: 'candle',
+                                            type: 'candlestick',
+                                        },
+                                    ]}
+                                />
+                            )}
                         </Box>
                     </LayoutGrid>
                 </>

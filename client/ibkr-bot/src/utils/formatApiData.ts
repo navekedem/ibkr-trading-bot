@@ -1,8 +1,10 @@
-import { Company } from "../../../../types/company-api"
+import { Company } from '../../../../types/company';
 
 export const formatData = (data: any) => {
-    return data?.results?.map((company: Company, index: number) => ({
-        id: index,
-        ...company
-    })) || []
-}
+    return (
+        data?.results?.map((company: Company, index: number) => ({
+            id: index,
+            ...company,
+        })) || []
+    );
+};

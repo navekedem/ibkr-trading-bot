@@ -1,10 +1,17 @@
-import { BarSizeSetting, ErrorCode, EventName, IBApi, Stock } from '@stoqey/ib';
+import { BarSizeSetting, Contract, ContractDetails, ErrorCode, EventName, IBApi, NewsProvider, SecType, Stock } from '@stoqey/ib';
 import WebSocket from 'ws';
+import { Company } from '../types/company';
+import { formatDateToCustomString, parseDateStringNative } from './utils/general';
 
 // const app = express();
 // const server = http.createServer(app)
+//Date.parse(`${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)} ${time.substring(10)}`),
 const wss = new WebSocket.Server({ port: 8080 });
 let connected = false;
+let providers: NewsProvider[] = [];
+let contract: Contract = {
+    secType: SecType.STK,
+};
 const ib = new IBApi({ port: 7497 });
 
 ib.on(EventName.result, (event: string, args: string[]) => {
@@ -25,22 +32,56 @@ ib.on(EventName.error, (error: Error, code: ErrorCode, reqId: number) => {
     console.log(error);
 });
 
+ib.on(EventName.newsProviders, (newsProviders: NewsProvider[]) => {
+    // console.log('newsProviders', newsProviders);
+    providers = [...newsProviders];
+});
+
+ib.on(EventName.contractDetails, (reqId: number, contractDetails: ContractDetails) => {
+    console.log('contractDetails', JSON.stringify(contractDetails));
+
+    if (contract.symbol === contractDetails.contract.symbol && contract.conId) return;
+    contract.conId = contractDetails.contract.conId;
+    // console.log((contract.conId = contractDetails.contract.conId));
+    // console.log('ids', contract.conId, contractDetails.contract.conId);
+    if (providers.length) {
+        const codes = providers.map((provider) => provider.providerCode).join('+');
+        const date = new Date();
+        const today = formatDateToCustomString(date);
+        date.setMonth(date.getMonth() - 1);
+        const beforeOneMonth = formatDateToCustomString(date);
+        console.log('items', 6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
+        // ib.reqHistoricalNews(6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
+    }
+});
+ib.on(EventName.historicalNews, (reqId: number, time: string, providerCode: string, articleId: string, headline: string) => {
+    // console.log('contractDetails', contractDetails);
+    console.log(headline);
+});
+
 if (!connected) {
     ib.connect();
 }
 
 const aggregationBuffer: any = {};
+
 wss.on('connection', (ws: WebSocket) => {
     ws.on('message', (message: string) => {
         if (!message) return;
         console.log(`Recived Message => ${message}`);
-        const contract = new Stock(message, undefined, 'USD');
-        ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
+        const parsedMessage = JSON.parse(message) as Company;
+        const stock = new Stock(parsedMessage.ticker, undefined, 'USD');
+        contract.symbol = parsedMessage.ticker;
+        contract.currency = parsedMessage.currency_name;
+        ib.reqNewsProviders();
+        ib.reqContractDetails(2001, contract);
+        ib.reqHistoricalData(6000, stock, '', '2 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+        // ib.reqNewsArticle(2000, stock);
+        // ib.reqHistoricalNews(2000, contract.conId);
+        ib.reqHistoricalData(6001, stock, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
+        ib.reqHistoricalData(6002, stock, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
+        // ib.reqRealTimeBars(6003, stock, 5, 'TRADES', true);
     });
-
     ib.on(
         EventName.historicalData,
         (
@@ -57,7 +98,7 @@ wss.on('connection', (ws: WebSocket) => {
         ) => {
             const tickerData = {
                 reqId,
-                date: Date.parse(`${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)} ${time.substring(10)}`),
+                date: parseDateStringNative(time),
                 open,
                 high,
                 low,
@@ -65,6 +106,7 @@ wss.on('connection', (ws: WebSocket) => {
                 volume,
                 WAP,
             };
+            if (!tickerData.date || (!tickerData.close && !tickerData.open)) return;
             ws.send(JSON.stringify(tickerData));
         },
     );
