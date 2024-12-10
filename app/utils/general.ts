@@ -30,7 +30,7 @@ export const parseDateStringNative = (dateString: string) => {
 };
 
 export const formatDateToCustomString = (date: Date) => {
-    const options = {
+    const options: any = {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',

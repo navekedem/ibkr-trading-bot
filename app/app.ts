@@ -1,12 +1,13 @@
-import { BarSizeSetting, Contract, ContractDetails, ErrorCode, EventName, IBApi, NewsProvider, SecType, Stock } from '@stoqey/ib';
-import WebSocket from 'ws';
-import { Company } from '../types/company';
-import { formatDateToCustomString, parseDateStringNative } from './utils/general';
+import type { Contract, ContractDetails, NewsProvider } from '@stoqey/ib';
+import { BarSizeSetting, ErrorCode, EventName, IBApi, SecType, Stock } from '@stoqey/ib';
+import { WebSocketServer } from 'ws';
+import type { Company } from '../types/company';
+import { formatDateToCustomString, parseDateStringNative } from './utils/general.ts';
 
 // const app = express();
 // const server = http.createServer(app)
 //Date.parse(`${time.substring(0, 4)}-${time.substring(4, 6)}-${time.substring(6, 8)} ${time.substring(10)}`),
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocketServer({ port: 8080 });
 let connected = false;
 let providers: NewsProvider[] = [];
 let contract: Contract = {
@@ -38,7 +39,7 @@ ib.on(EventName.newsProviders, (newsProviders: NewsProvider[]) => {
 });
 
 ib.on(EventName.contractDetails, (reqId: number, contractDetails: ContractDetails) => {
-    console.log('contractDetails', JSON.stringify(contractDetails));
+    // console.log('contractDetails', JSON.stringify(contractDetails));
 
     if (contract.symbol === contractDetails.contract.symbol && contract.conId) return;
     contract.conId = contractDetails.contract.conId;
@@ -50,7 +51,7 @@ ib.on(EventName.contractDetails, (reqId: number, contractDetails: ContractDetail
         const today = formatDateToCustomString(date);
         date.setMonth(date.getMonth() - 1);
         const beforeOneMonth = formatDateToCustomString(date);
-        console.log('items', 6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
+        // console.log('items', 6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
         // ib.reqHistoricalNews(6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
     }
 });

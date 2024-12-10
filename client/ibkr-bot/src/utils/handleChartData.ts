@@ -44,6 +44,7 @@ export const createAnalysis = (prices: MarketData[], company: Company): CompanyA
         timeframe: 'daily',
         supportLines: support,
         resistanceLines: resistance,
+        latestTwoMonthPrices: closingPrices,
         indicators,
         maxResistance: Math.max(...resistance),
         minSupport: Math.min(...support),

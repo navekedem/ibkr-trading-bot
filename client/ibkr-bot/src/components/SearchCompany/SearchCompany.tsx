@@ -8,15 +8,15 @@ import { formatData } from '../../utils/formatApiData';
 
 export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {
     const [formattedData, setFormattedData] = useState<Company[]>([]);
-    const { mutate, isLoading } = useMutation({
-        mutationFn: (searchValue: string) => getCompanies(searchValue),
+    const { mutate } = useMutation({
+        mutationFn: async (searchValue: string) => await getCompanies(searchValue),
         onSuccess(data, variables, context) {
             setFormattedData(formatData(data));
         },
     });
 
     const handleOnSearch = (searchValue: string, results: any) => {
-        if (searchValue.length < 4) return;
+        if (searchValue.length < 3) return;
         mutate(searchValue);
     };
 
@@ -39,6 +39,7 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
             <ReactSearchAutocomplete
                 items={formattedData}
                 placeholder={'Search Company'}
+                showNoResults={!formattedData.length}
                 fuseOptions={{ keys: ['name', 'ticker'] }}
                 onSearch={handleOnSearch}
                 onSelect={handleOnSelect}
