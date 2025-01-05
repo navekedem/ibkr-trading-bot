@@ -1,5 +1,4 @@
 export const getCompanies = async (searchParam: string) => {
-    console.log(searchParam);
     const errorMessage = 'Error in Get Companies api';
     try {
         const response = await fetch(

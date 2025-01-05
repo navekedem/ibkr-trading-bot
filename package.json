@@ -15,7 +15,7 @@
   "scripts": {
     "test": "test",
     "tsc": "tsc",
-    "dev": "node --experimental-strip-types --experimental-transform-types ./app/app.ts",
+    "dev": "node --experimental-strip-types --experimental-transform-types --watch ./app/app.ts",
     "prod": "tsc && node ./build/app.js"
   },
   "author": "nave kedem",

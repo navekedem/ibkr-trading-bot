@@ -2,7 +2,7 @@ import type { Contract, ContractDetails, NewsProvider } from '@stoqey/ib';
 import { BarSizeSetting, ErrorCode, EventName, IBApi, SecType, Stock } from '@stoqey/ib';
 import { WebSocketServer } from 'ws';
 import type { Company } from '../types/company';
-import { formatDateToCustomString, parseDateStringNative } from './utils/general.ts';
+import { parseDateStringNative } from './utils/general.ts';
 
 // const app = express();
 // const server = http.createServer(app)
@@ -14,7 +14,9 @@ let contract: Contract = {
     secType: SecType.STK,
 };
 const ib = new IBApi({ port: 7497 });
-
+function formatDateForNews(date: Date): string {
+    return date.toISOString().split('T')[0].replace(/-/g, '');
+}
 ib.on(EventName.result, (event: string, args: string[]) => {
     // console.log(`${event} ${JSON.stringify(args)}`)
 });
@@ -27,37 +29,90 @@ ib.on(EventName.connected, () => {
 ib.on(EventName.disconnected, () => {
     connected = false;
     console.log('Disconnected!');
+    // try {
+    //     console.log('Trying to reconnect!');
+    //     ib.connect();
+    //     connected = true;
+    // } catch (error) {
+    //     console.log(error);
+    // }
 });
 ib.on(EventName.error, (error: Error, code: ErrorCode, reqId: number) => {
-    connected = false;
-    console.log(error);
+    // connected = false;
+    console.log(`Error ${code} (${reqId}): ${error}`);
+    if (reqId === 3001 || reqId === 6007) {
+        console.error('News-related error:', {
+            code,
+            message: error.message,
+            reqId,
+        });
+        return; // Don't disconnect for news-related errors
+    }
+    if ([ErrorCode.CONNECT_FAIL, ErrorCode.NOT_CONNECTED].includes(code)) {
+        connected = false;
+    }
+
+    // Handle news-specific errors
+    if (reqId === 6007) {
+        console.error('News request error:', error.message);
+    }
 });
 
 ib.on(EventName.newsProviders, (newsProviders: NewsProvider[]) => {
-    // console.log('newsProviders', newsProviders);
     providers = [...newsProviders];
+    console.log('Available news providers:', newsProviders);
 });
 
 ib.on(EventName.contractDetails, (reqId: number, contractDetails: ContractDetails) => {
-    // console.log('contractDetails', JSON.stringify(contractDetails));
+    if (reqId === 3001) {
+        const conId = contractDetails.contract.conId;
+        if (!conId) return;
+        console.log('conId', conId);
+        // Request historical news
+        try {
+            const startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 1); // One month ago
+            const endDate = new Date(); // Today
 
-    if (contract.symbol === contractDetails.contract.symbol && contract.conId) return;
-    contract.conId = contractDetails.contract.conId;
-    // console.log((contract.conId = contractDetails.contract.conId));
-    // console.log('ids', contract.conId, contractDetails.contract.conId);
-    if (providers.length) {
-        const codes = providers.map((provider) => provider.providerCode).join('+');
-        const date = new Date();
-        const today = formatDateToCustomString(date);
-        date.setMonth(date.getMonth() - 1);
-        const beforeOneMonth = formatDateToCustomString(date);
-        // console.log('items', 6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
-        // ib.reqHistoricalNews(6000, contract.conId!, providers[0].providerCode!, today, beforeOneMonth, 50);
+            // Format dates in YYYYMMDD format
+            // const start = startDate.toISOString().slice(0, 10).replace(/-/g, '');
+            // const end = endDate.toISOString().slice(0, 10).replace(/-/g, '');
+            const start = '20231201'; // December 1, 2023
+            const end = '20240115'; // Ja
+            ib.reqHistoricalNews(
+                6007,
+                conId,
+                'BRFG', // Changed to Briefing.com General Market Columns
+                '', // Empty string for start date
+                '', // Empty string for end date
+                5, // Keep small number of results
+            );
+
+            console.log('Historical news request sent:', {
+                reqId: 6007,
+                conId,
+                provider: 'BRFG',
+            });
+        } catch (err) {
+            console.error('Failed to request news:', err);
+        }
     }
 });
+
 ib.on(EventName.historicalNews, (reqId: number, time: string, providerCode: string, articleId: string, headline: string) => {
-    // console.log('contractDetails', contractDetails);
-    console.log(headline);
+    console.log('historicalNews - here');
+    const newsData = {
+        time,
+        providerCode,
+        headline,
+    };
+    console.log(newsData);
+    // Send news through WebSocket
+    // wss.clients.forEach((client) => {
+    //     if (client.readyState === WebSocket.OPEN) {
+    //         client.send(JSON.stringify({ type: 'news', data: newsData }));
+    //     }
+    // });
 });
 
 if (!connected) {
@@ -67,22 +122,27 @@ if (!connected) {
 const aggregationBuffer: any = {};
 
 wss.on('connection', (ws: WebSocket) => {
-    ws.on('message', (message: string) => {
+    ws.onmessage = (message: MessageEvent) => {
         if (!message) return;
-        console.log(`Recived Message => ${message}`);
-        const parsedMessage = JSON.parse(message) as Company;
+        console.log(`Received Message => ${message.data}`);
+        const parsedMessage = JSON.parse(message.data) as Company;
         const stock = new Stock(parsedMessage.ticker, undefined, 'USD');
+        const newsContract: Contract = {
+            symbol: parsedMessage.ticker,
+            secType: SecType.STK,
+            exchange: 'SMART',
+            currency: 'USD',
+        };
         contract.symbol = parsedMessage.ticker;
         contract.currency = parsedMessage.currency_name;
         ib.reqNewsProviders();
-        ib.reqContractDetails(2001, contract);
+        // ib.reqContractDetails(3001, newsContract);
         ib.reqHistoricalData(6000, stock, '', '2 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
         // ib.reqNewsArticle(2000, stock);
         // ib.reqHistoricalNews(2000, contract.conId);
         ib.reqHistoricalData(6001, stock, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
         ib.reqHistoricalData(6002, stock, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        // ib.reqRealTimeBars(6003, stock, 5, 'TRADES', true);
-    });
+    };
     ib.on(
         EventName.historicalData,
         (
@@ -173,3 +233,24 @@ wss.on('connection', (ws: WebSocket) => {
         },
     );
 });
+
+// const triggerInteractiveEvents = () => {
+//     if (contract.symbol === contractDetails.contract.symbol && contract.conId) return;
+//     contract.conId = contractDetails.contract.conId;
+
+//     // Request historical news once we have the contract ID
+//     const date = new Date();
+//     const today = formatDateToCustomString(date);
+//     date.setMonth(date.getMonth() - 1);
+//     const beforeOneMonth = formatDateToCustomString(date);
+
+//     // Request news for the last month
+//     ib.reqHistoricalNews(
+//         6000,
+//         contract.conId!,
+//         'BZ+DJ+MT+UK', // Common news providers (Benzinga, Dow Jones, MT Newswires)
+//         today,
+//         beforeOneMonth,
+//         50, // Number of news items
+//     );
+// };

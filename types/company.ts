@@ -24,5 +24,5 @@ export interface CompanyAnalysis {
     timeframe: 'daily' | 'hourly';
     latestNewsTitles: string[];
     currentStockPrice: number;
-    latestTwoMonthPrices: number[];
+    latestTwoMonthPrices: { close: number; date: number; volume: number }[];
 }
