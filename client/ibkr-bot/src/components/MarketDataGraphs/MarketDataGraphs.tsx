@@ -1,15 +1,18 @@
 import { Box, Button, Center, Flex, Heading } from '@chakra-ui/react';
+import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Layouts } from 'react-grid-layout';
-import { Company } from '../../../../../types/company';
+import { Company, CompanyAnalysisResponse } from '../../../../../types/company';
 import { MarketData } from '../../../../../types/market-data';
+import { sendStockAnalysis } from '../../api/send-stock-analysis/send-stock-analysis';
 import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions } from '../../consts/apexChartOptions';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { createAnnotationsLines } from '../../utils/createAnnotationsLines';
 import { createAnalysis, handleChartData } from '../../utils/handleChartData';
 import { LayoutGrid } from '../LayoutGrid/LayoutGrid';
 import { LayoutItemTitle } from '../LayoutGrid/LayoutItemTitle';
+import { AnalysisContent, ModalAnalysis } from '../ModalAnalysis/ModalAnalysis';
 
 const ChartsLayout: Layouts = {
     lg: [
@@ -24,7 +27,12 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
     const [dailyChartData, setDailyChartData] = useState<MarketData[]>([]);
     const [hourlyChartData, setHourlyChartData] = useState<MarketData[]>([]);
     const [minutesChartData, setMinutesChartData] = useState<MarketData[]>([]);
+    const [isOpen, setIsOpen] = useState<boolean>(false);
+    const [analysisResponse, setAnalysisResponse] = useState<CompanyAnalysisResponse>();
     const newMinutesChartData = useRef<MarketData[]>([]);
+    const { mutateAsync, isPending } = useMutation({
+        mutationFn: sendStockAnalysis,
+    });
 
     const initCharts = () => {
         setDailyChartData([]);
@@ -32,9 +40,13 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
         setMinutesChartData([]);
     };
 
-    const sendAnalysis = () => {
+    const sendAnalysis = async () => {
         const analysis = createAnalysis(dailyChartData, selectedStock!);
+        const res = await mutateAsync(analysis);
         console.log(analysis);
+        console.log(res);
+        if (res) setAnalysisResponse(res);
+        setIsOpen(true);
     };
 
     useEffect(() => {
@@ -69,10 +81,18 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
 
     return (
         <>
+            <ModalAnalysis
+                isOpen={isOpen}
+                showFooter={false}
+                title={`${selectedStock?.name} (${selectedStock?.ticker}) Analysis`}
+                onClose={() => setIsOpen(false)}
+            >
+                {analysisResponse && <AnalysisContent {...analysisResponse} />}
+            </ModalAnalysis>
             {!selectedStock ? (
                 <Center>
                     <Heading flexGrow={1} textAlign={'center'}>
-                        Please Choose A Stock to start Trade
+                        Please Choose A Stock
                     </Heading>
                 </Center>
             ) : (
@@ -82,7 +102,7 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                             <Heading textAlign={'center'}>
                                 {selectedStock?.name} {selectedStock?.ticker}
                             </Heading>
-                            <Button isLoading={false} onClick={sendAnalysis} loadingText="Saving...">
+                            <Button isLoading={isPending} onClick={sendAnalysis} loadingText="Sending...">
                                 Send Analysis To AI
                             </Button>
                         </Flex>

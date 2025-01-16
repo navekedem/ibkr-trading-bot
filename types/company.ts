@@ -26,3 +26,13 @@ export interface CompanyAnalysis {
     currentStockPrice: number;
     latestTwoMonthPrices: { close: number; date: number; volume: number }[];
 }
+
+export interface CompanyAnalysisResponse {
+    position: string;
+    buyPrice: number;
+    sellPrice: number;
+    stoploss: number;
+    riskLevel: string;
+    confidenceScore: number;
+    keyInsights: string;
+}

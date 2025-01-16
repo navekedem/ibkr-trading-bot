@@ -35,7 +35,7 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
     };
 
     return (
-        <Box width={400} margin={'1rem auto'}>
+        <Box width={400}>
             <ReactSearchAutocomplete
                 items={formattedData}
                 placeholder={'Search Company'}
@@ -47,7 +47,12 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
                 autoFocus
                 formatResult={formatResult}
                 styling={{
-                    zIndex: 999,
+                    borderRadius: '20px',
+                    boxShadow: 'none',
+                    border: '0 none',
+                    zIndex: 2,
+                    height: '40px',
+                    backgroundColor: '#F4EFE6',
                 }}
             />
         </Box>

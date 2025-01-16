@@ -1,16 +1,14 @@
-import WebSocket from 'ws'
-import Alpaca from "@alpacahq/alpaca-trade-api";
-import { MarketData } from "../types/market-data";
+import Alpaca from '@alpacahq/alpaca-trade-api';
+import WebSocket from 'ws';
 const wss = new WebSocket.Server({ port: 8080 });
 const alpaca = new Alpaca({
     keyId: 'PK0QA42MWURMF476WSJC',
     secretKey: 'tNd1pISH73KjhAfGqSyV9aerpyP8oEQNisf3JTkJ',
-    baseUrl: "https://paper-api.alpaca.markets",
+    baseUrl: 'https://paper-api.alpaca.markets',
     paper: true,
-})
-const alpacaWebSocket = alpaca.data_stream_v2
+});
+const alpacaWebSocket = alpaca.data_stream_v2;
 alpacaWebSocket.connect();
-
 
 const currentDate = new Date();
 const startOfWeek = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
@@ -23,8 +21,7 @@ const formatDate = (date: Date) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-}
-
+};
 
 wss.on('connection', (ws: WebSocket) => {
     ws.on('message', async (message: string) => {
@@ -34,7 +31,7 @@ wss.on('connection', (ws: WebSocket) => {
         const formattedStartOfWeek = formatDate(startOfWeek);
         const formattedEndOfWeek = formatDate(endOfWeek);
         alpacaWebSocket.onError((err) => {
-            console.log("Error:", err);
+            console.log('Error:', err);
         });
         // const dailyChart = alpaca.getBarsV2(message, {
         //   start: formattedStartOfWeek,
@@ -57,15 +54,10 @@ wss.on('connection', (ws: WebSocket) => {
         //   );
         // }
         // console.log(got);
-        // const contract = new Stock(message, undefined, 'USD')
-        // ib.reqHistoricalData(6000, contract, '', '1 M', BarSizeSetting.DAYS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        // ib.reqHistoricalData(6001, contract, '', '1 W', BarSizeSetting.HOURS_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        // ib.reqHistoricalData(6002, contract, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
-        // ib.reqRealTimeBars(6003, contract, 5, 'TRADES', true);
-    })
+    });
 
     alpacaWebSocket.onStockBar((trade) => {
-        console.log("Bar:", trade);
+        console.log('Bar:', trade);
         const tickerData = {
             reqId: 6002,
             date: new Date(trade.Timestamp).getTime(),
@@ -73,25 +65,20 @@ wss.on('connection', (ws: WebSocket) => {
             high: trade.HighPrice,
             low: trade.LowPrice,
             close: trade.ClosePrice,
-            volume: trade.Volume
-        }
-        ws.send(
-            JSON.stringify(tickerData)
-        );
+            volume: trade.Volume,
+        };
+        ws.send(JSON.stringify(tickerData));
     });
-
-})
-
+});
 
 // Format the start and end of the week
 
 const getTimeframe = () => {
     const start = new Date();
     const end = new Date();
-    start.setMonth(start.getMonth() - 1)
-    return { end, start }
-}
-
+    start.setMonth(start.getMonth() - 1);
+    return { end, start };
+};
 
 const formatAlpacaData = (item: any, reqId: number) => {
     return {
@@ -101,7 +88,6 @@ const formatAlpacaData = (item: any, reqId: number) => {
         high: item.HighPrice,
         low: item.LowPrice,
         close: item.ClosePrice,
-        volume: item.Volume
-    }
-}
-
+        volume: item.Volume,
+    };
+};
