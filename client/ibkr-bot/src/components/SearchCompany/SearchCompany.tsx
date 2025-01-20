@@ -1,7 +1,6 @@
-import { Box, Text } from '@chakra-ui/react';
 import { useMutation } from '@tanstack/react-query';
+import { AutoComplete } from 'antd';
 import { useState } from 'react';
-import { ReactSearchAutocomplete } from 'react-search-autocomplete';
 import { Company } from '../../../../../types/company';
 import { getCompanies } from '../../api/get-companies/get-companies';
 import { formatData } from '../../utils/formatApiData';
@@ -15,7 +14,7 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
         },
     });
 
-    const handleOnSearch = (searchValue: string, results: any) => {
+    const handleOnSearch = (searchValue: string) => {
         if (searchValue.length < 3) return;
         mutate(searchValue);
     };
@@ -27,34 +26,31 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
     const formatResult = (item: Company) => {
         return (
             <div key={item.cik}>
-                <Text as="b">{item.ticker}</Text>
+                <b>{item.ticker}</b>
                 <br />
-                <Text as="i">{item.name}</Text>
+                <i>{item.name}</i>
             </div>
         );
     };
 
     return (
-        <Box width={400}>
-            <ReactSearchAutocomplete
-                items={formattedData}
+        <div>
+            <AutoComplete
+                options={formattedData.map((item) => ({
+                    value: item.cik,
+                    label: formatResult(item),
+                }))}
                 placeholder={'Search Company'}
-                showNoResults={!formattedData.length}
-                fuseOptions={{ keys: ['name', 'ticker'] }}
                 onSearch={handleOnSearch}
                 onSelect={handleOnSelect}
-                inputDebounce={500}
-                autoFocus
-                formatResult={formatResult}
-                styling={{
-                    borderRadius: '20px',
-                    boxShadow: 'none',
-                    border: '0 none',
-                    zIndex: 2,
-                    height: '40px',
-                    backgroundColor: '#F4EFE6',
+                onClear={() => setSelectedStock(null)}
+                allowClear={true}
+                className="search-autocomplete"
+                style={{
+                    width: '400px',
                 }}
+                autoFocus
             />
-        </Box>
+        </div>
     );
 };

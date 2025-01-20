@@ -1,27 +1,26 @@
-import { Box, Button, Link as ChakraLink, Flex, Text } from '@chakra-ui/react';
+import { Button, Flex } from 'antd';
 import { FaHome } from 'react-icons/fa';
-import { Link as ReactRouterLink, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Company } from '../../../../../types/company';
 import { SearchCompany } from '../SearchCompany/SearchCompany';
+
 export const AppBar: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {
     const navigate = useNavigate();
     return (
-        <Box backgroundColor={'#fff'} display={'flex'} padding={'10px'} justifyContent={'space-between'} boxShadow={'0 2px 4px 0 rgba(0,0,0,.2)'}>
-            <Flex justifyContent={'center'} gap={2} alignItems={'center'}>
-                <FaHome size={20} />
-                <Text color={'black'} fontWeight={'bold'} fontSize={'1.3rem'}>
-                    Trading Bot Dashboard
-                </Text>
-                <ChakraLink as={ReactRouterLink} to="/home">
+        <div style={{ backgroundColor: '#fff', display: 'flex', padding: '10px', justifyContent: 'space-between', boxShadow: '0 2px 4px 0 rgba(0,0,0,.2)' }}>
+            <Flex style={{ justifyContent: 'center', gap: '8px', alignItems: 'center' }}>
+                <FaHome size={20} style={{ position: 'relative', bottom: '2px' }} />
+                <div style={{ color: 'black', fontWeight: 'bold', fontSize: '1.3rem' }}>Trading Bot Dashboard</div>
+                {/* <Button type="link" variant="link">
                     Dashboard
-                </ChakraLink>
+                </Button> */}
             </Flex>
-            <Flex justifyContent={'center'} gap={2} alignItems={'center'}>
+            <Flex style={{ justifyContent: 'center', gap: '10px', alignItems: 'center' }}>
                 <SearchCompany setSelectedStock={setSelectedStock} />
-                <Button colorScheme="red" onClick={() => navigate('/')} borderRadius={'100px'} fontWeight={'bold'} fontSize={'1rem'}>
+                <Button type="primary" style={{ borderRadius: '20px', fontWeight: 'bold', fontSize: '1rem' }} onClick={() => navigate('/')}>
                     Logout
                 </Button>
             </Flex>
-        </Box>
+        </div>
     );
 };

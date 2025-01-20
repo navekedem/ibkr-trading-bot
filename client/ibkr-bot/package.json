@@ -9,23 +9,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.10.3",
-    "@emotion/react": "^11.10.6",
-    "@emotion/styled": "^11.10.6",
     "@tanstack/react-query": "^5.60.5",
+    "antd": "^5.23.1",
     "apexcharts": "^3.37.3",
-    "framer-motion": "^10.11.2",
     "indicatorts": "^2.2.1",
-    "localforage": "^1.10.0",
-    "match-sorter": "^6.3.1",
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.0",
     "react-dom": "^18.2.0",
     "react-grid-layout": "^1.3.4",
     "react-icons": "^4.12.0",
     "react-router-dom": "^6.10.0",
-    "react-search-autocomplete": "^8.3.2",
-    "sort-by": "^1.2.0"
+    "react-search-autocomplete": "^8.3.2"
   },
   "devDependencies": {
     "@types/react": "^18.0.26",

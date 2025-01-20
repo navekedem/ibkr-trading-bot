@@ -1,5 +1,5 @@
-import { Box, Button, Center, Flex, Heading } from '@chakra-ui/react';
 import { useMutation } from '@tanstack/react-query';
+import { Button, Flex } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Layouts } from 'react-grid-layout';
@@ -81,34 +81,28 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
 
     return (
         <>
-            <ModalAnalysis
-                isOpen={isOpen}
-                showFooter={false}
-                title={`${selectedStock?.name} (${selectedStock?.ticker}) Analysis`}
-                onClose={() => setIsOpen(false)}
-            >
+            <ModalAnalysis open={isOpen} title={`${selectedStock?.name} (${selectedStock?.ticker}) Analysis`} onClose={() => setIsOpen(false)}>
                 {analysisResponse && <AnalysisContent {...analysisResponse} />}
             </ModalAnalysis>
             {!selectedStock ? (
-                <Center>
-                    <Heading flexGrow={1} textAlign={'center'}>
-                        Please Choose A Stock
-                    </Heading>
-                </Center>
+                <div>
+                    <h2>Please Choose A Stock</h2>
+                </div>
             ) : (
                 <>
-                    <Center>
-                        <Flex gap={6} alignItems={'center'}>
-                            <Heading textAlign={'center'}>
+                    <div>
+                        <Flex gap={6}>
+                            <h2>
                                 {selectedStock?.name} {selectedStock?.ticker}
-                            </Heading>
-                            <Button isLoading={isPending} onClick={sendAnalysis} loadingText="Sending...">
+                            </h2>
+
+                            <Button loading={isPending} onClick={sendAnalysis}>
                                 Send Analysis To AI
                             </Button>
                         </Flex>
-                    </Center>
+                    </div>
                     <LayoutGrid layouts={ChartsLayout}>
-                        <Box key={'day'}>
+                        <div key={'day'}>
                             <LayoutItemTitle title="Daily Chart" chartId={DailyChartOptions.chart?.id!} />
                             <ReactApexChart
                                 type="candlestick"
@@ -122,8 +116,8 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                                     },
                                 ]}
                             />
-                        </Box>
-                        <Box key={'hour'}>
+                        </div>
+                        <div key={'hour'}>
                             <LayoutItemTitle title="Hour Chart" chartId={HourlyChartOptions.chart?.id!} />
                             <ReactApexChart
                                 type="candlestick"
@@ -137,8 +131,8 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                                     },
                                 ]}
                             />
-                        </Box>
-                        <Box key={'minute'}>
+                        </div>
+                        <div key={'minute'}>
                             <LayoutItemTitle title="Minutes Chart" chartId={MinutesChartOptions.chart?.id!} />
                             {!!minutesChartData.length && (
                                 <ReactApexChart
@@ -154,7 +148,7 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
                                     ]}
                                 />
                             )}
-                        </Box>
+                        </div>
                     </LayoutGrid>
                 </>
             )}
