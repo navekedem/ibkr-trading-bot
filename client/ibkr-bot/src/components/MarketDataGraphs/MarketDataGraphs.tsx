@@ -1,29 +1,31 @@
 import { useMutation } from '@tanstack/react-query';
 import { Button, Flex } from 'antd';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Layouts } from 'react-grid-layout';
-import { Company, CompanyAnalysisResponse } from '../../../../../types/company';
+import { CompanyAnalysisResponse } from '../../../../../types/company';
 import { MarketData } from '../../../../../types/market-data';
 import { sendStockAnalysis } from '../../api/send-stock-analysis/send-stock-analysis';
 import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions } from '../../consts/apexChartOptions';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { createAnnotationsLines } from '../../utils/createAnnotationsLines';
 import { createAnalysis, handleChartData } from '../../utils/handleChartData';
+import { SelectedStockContext } from '../AppLayout/AppLayout';
 import { LayoutGrid } from '../LayoutGrid/LayoutGrid';
 import { LayoutItemTitle } from '../LayoutGrid/LayoutItemTitle';
 import { AnalysisContent, ModalAnalysis } from '../ModalAnalysis/ModalAnalysis';
 
 const ChartsLayout: Layouts = {
-    lg: [
-        { i: 'day', x: 0, y: 1, w: 6, h: 5, minW: 4, minH: 5 },
-        { i: 'hour', x: 6, y: 1, w: 6, h: 5, minW: 4, minH: 5 },
-        { i: 'minute', x: 0, y: 0, w: 12, h: 5, minW: 4, minH: 5 },
+    md: [
+        { i: 'day', x: 0, y: 0, w: 12, h: 5, minW: 4, minH: 5 },
+        { i: 'hour', x: 0, y: 1, w: 12, h: 5, minW: 4, minH: 5 },
+        { i: 'minute', x: 0, y: 2, w: 12, h: 5, minW: 4, minH: 5 },
     ],
 };
 
-export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ selectedStock }) => {
+export const MarketDataGraphs: React.FC = () => {
     const { ws } = useWebSocket('ws://localhost:8080');
+    const selectedStock = useContext(SelectedStockContext);
     const [dailyChartData, setDailyChartData] = useState<MarketData[]>([]);
     const [hourlyChartData, setHourlyChartData] = useState<MarketData[]>([]);
     const [minutesChartData, setMinutesChartData] = useState<MarketData[]>([]);
@@ -64,9 +66,9 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
     useEffect(() => {
         if (!selectedStock) return;
         initCharts();
-
+        console.log(selectedStock);
         ws?.send(JSON.stringify(selectedStock));
-    }, [selectedStock]);
+    }, [selectedStock, ws]);
 
     useEffect(() => {
         if (!minutesChartData || !minutesChartData.length) return;
@@ -84,74 +86,64 @@ export const MarketDataGraphs: React.FC<{ selectedStock: Company | null }> = ({ 
             <ModalAnalysis open={isOpen} title={`${selectedStock?.name} (${selectedStock?.ticker}) Analysis`} onClose={() => setIsOpen(false)}>
                 {analysisResponse && <AnalysisContent {...analysisResponse} />}
             </ModalAnalysis>
-            {!selectedStock ? (
-                <div>
-                    <h2>Please Choose A Stock</h2>
-                </div>
-            ) : (
-                <>
-                    <div>
-                        <Flex gap={6}>
-                            <h2>
-                                {selectedStock?.name} {selectedStock?.ticker}
-                            </h2>
 
-                            <Button loading={isPending} onClick={sendAnalysis}>
-                                Send Analysis To AI
-                            </Button>
-                        </Flex>
-                    </div>
-                    <LayoutGrid layouts={ChartsLayout}>
-                        <div key={'day'}>
-                            <LayoutItemTitle title="Daily Chart" chartId={DailyChartOptions.chart?.id!} />
-                            <ReactApexChart
-                                type="candlestick"
-                                options={createAnnotationsLines(dailyChartData, DailyChartOptions, false)}
-                                height={500}
-                                series={[
-                                    {
-                                        data: handleChartData(dailyChartData),
-                                        name: 'candle',
-                                        type: 'candlestick',
-                                    },
-                                ]}
-                            />
-                        </div>
-                        <div key={'hour'}>
-                            <LayoutItemTitle title="Hour Chart" chartId={HourlyChartOptions.chart?.id!} />
-                            <ReactApexChart
-                                type="candlestick"
-                                height={500}
-                                options={createAnnotationsLines(hourlyChartData, HourlyChartOptions, false)}
-                                series={[
-                                    {
-                                        data: handleChartData(hourlyChartData),
-                                        name: 'candle',
-                                        type: 'candlestick',
-                                    },
-                                ]}
-                            />
-                        </div>
-                        <div key={'minute'}>
-                            <LayoutItemTitle title="Minutes Chart" chartId={MinutesChartOptions.chart?.id!} />
-                            {!!minutesChartData.length && (
-                                <ReactApexChart
-                                    type="candlestick"
-                                    height={500}
-                                    options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
-                                    series={[
-                                        {
-                                            data: handleChartData(minutesChartData),
-                                            name: 'candle',
-                                            type: 'candlestick',
-                                        },
-                                    ]}
-                                />
-                            )}
-                        </div>
-                    </LayoutGrid>
-                </>
-            )}
+            <Flex gap={6} align="center">
+                <h2>
+                    {selectedStock?.name} {selectedStock?.ticker}
+                </h2>
+                <Button loading={isPending} onClick={sendAnalysis}>
+                    Send Analysis To AI
+                </Button>
+            </Flex>
+            <LayoutGrid layouts={ChartsLayout}>
+                <div key={'day'}>
+                    <LayoutItemTitle title="Daily Chart" chartId={DailyChartOptions.chart?.id!} />
+                    <ReactApexChart
+                        type="candlestick"
+                        options={createAnnotationsLines(dailyChartData, DailyChartOptions, false)}
+                        height={500}
+                        series={[
+                            {
+                                data: handleChartData(dailyChartData),
+                                name: 'candle',
+                                type: 'candlestick',
+                            },
+                        ]}
+                    />
+                </div>
+                <div key={'hour'}>
+                    <LayoutItemTitle title="Hour Chart" chartId={HourlyChartOptions.chart?.id!} />
+                    <ReactApexChart
+                        type="candlestick"
+                        height={500}
+                        options={createAnnotationsLines(hourlyChartData, HourlyChartOptions, false)}
+                        series={[
+                            {
+                                data: handleChartData(hourlyChartData),
+                                name: 'candle',
+                                type: 'candlestick',
+                            },
+                        ]}
+                    />
+                </div>
+                <div key={'minute'}>
+                    <LayoutItemTitle title="Minutes Chart" chartId={MinutesChartOptions.chart?.id!} />
+                    {!!minutesChartData.length && (
+                        <ReactApexChart
+                            type="candlestick"
+                            height={500}
+                            options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
+                            series={[
+                                {
+                                    data: handleChartData(minutesChartData),
+                                    name: 'candle',
+                                    type: 'candlestick',
+                                },
+                            ]}
+                        />
+                    )}
+                </div>
+            </LayoutGrid>
         </>
     );
 };

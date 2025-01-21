@@ -5,13 +5,15 @@ import '/node_modules/react-resizable/css/styles.css';
 
 interface LayoutGridProps extends ResponsiveProps, ReactGridLayout.WidthProviderProps {}
 
-const defaultProps = {
+const defaultProps: LayoutGridProps = {
     rowHeight: 100,
     breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 },
-    col: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
+    cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 },
     measureBeforeMount: false,
     useCSSTransforms: true,
     margin: [20, 20] as [number, number],
+    autoSize: true,
+    containerPadding: [20, 0] as [number, number],
     draggableHandle: '.layout-block-title',
 };
 
@@ -21,7 +23,7 @@ export const LayoutGrid: React.FC<LayoutGridProps> = (props) => {
 
     return (
         <ResponsiveReactGridLayout {...defaultProps} {...rest}>
-            {rest.layouts?.lg.map((itm: Layout, i: number) => (
+            {rest.layouts?.md.map((itm: Layout, i: number) => (
                 <div key={itm.i} data-grid={itm} className="block">
                     {Array.isArray(children) ? (children as ReactNode[])?.find((cp: any) => cp?.key === itm.i) || null : children}
                 </div>

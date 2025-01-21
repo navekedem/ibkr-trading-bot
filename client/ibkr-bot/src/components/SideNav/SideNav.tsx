@@ -1,27 +1,28 @@
 import { List } from 'antd';
 import { HiOutlineChartSquareBar } from 'react-icons/hi';
 import { PiGaugeLight } from 'react-icons/pi';
+import { Link } from 'react-router-dom';
 
 const data = [
     {
-        title: 'Overview',
+        title: <Link to="/overview">Overview</Link>,
         icon: <PiGaugeLight size={20} />,
     },
     {
-        title: 'Charts',
+        title: <Link to="/charts">Charts</Link>,
         icon: <HiOutlineChartSquareBar size={20} />,
     },
 ];
 
 export const SideNav: React.FC = () => {
     return (
-        <div style={{ width: '22%', borderRight: '1px solid #f0f0f0', padding: '20px' }}>
+        <div style={{ width: '10%', borderRight: '1px solid #f0f0f0', padding: '20px' }}>
             <List
                 itemLayout="horizontal"
                 dataSource={data}
                 renderItem={(item, index) => (
                     <List.Item>
-                        <List.Item.Meta avatar={item.icon} title={<a href="https://ant.design">{item.title}</a>} />
+                        <List.Item.Meta avatar={item.icon} title={item.title} />
                     </List.Item>
                 )}
             />

@@ -3,7 +3,6 @@
     font-size: 16px;
     line-height: 24px;
     font-weight: 400;
-    height: 100% !important;
     color: #000;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -12,19 +11,24 @@
     -webkit-text-size-adjust: 100%;
 }
 
-body {
+body,
+html {
     margin: 0;
-    min-width: 320px;
-    min-height: 100vh !important;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 #root {
-    height: 100vh;
+    height: 100%;
 }
 .block {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     border-radius: 5px;
     padding: 10px;
+}
+.layout-block-title {
+    margin: 0;
 }
 .layout-block-title:hover {
     cursor: grabbing;

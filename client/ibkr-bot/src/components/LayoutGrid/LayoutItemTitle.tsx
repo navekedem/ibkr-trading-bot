@@ -7,7 +7,7 @@ export const LayoutItemTitle: React.FC<{ title: string; chartId: string }> = ({ 
     };
 
     return (
-        <Flex style={{ padding: '10px 20px', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Flex style={{ padding: '0px 10px', justifyContent: 'space-between', alignItems: 'center' }}>
             <h4 className="layout-block-title">{title}</h4>
             <Button iconPosition="start" icon={<MdZoomInMap />} onClick={resetChartZoom} variant="solid">
                 Reset Zoom

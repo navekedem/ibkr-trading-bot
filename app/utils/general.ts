@@ -1,5 +1,6 @@
 import IBApi, { BarSizeSetting, Stock } from '@stoqey/ib';
 const aggregationBuffer: any = {};
+
 export const parseDateStringNative = (dateString: string) => {
     const trimmedString = dateString.trim();
     const parts = trimmedString.split(' ');
@@ -52,8 +53,8 @@ export const formatDateToCustomString = (date: Date) => {
 };
 
 export const triggerInteractiveEvents = (ib: IBApi, stock: Stock) => {
-    // ib.reqNewsProviders();
-    // ib.reqContractDetails(3001, newsContract);
+    ib.reqNewsProviders();
+    ib.reqContractDetails(3001, stock);
     // ib.reqNewsArticle(2000, stock);
     // try {
     //     ib.reqHistoricalNews(12003, 8314, 'BRFG', '', '', 10, null);

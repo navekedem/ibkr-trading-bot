@@ -5,7 +5,7 @@ import express from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import type { Company, CompanyAnalysis } from '../types/company';
-import { aggregateMinutesChart, parseDateStringNative, triggerInteractiveEvents } from './utils/general.ts';
+import { aggregateMinutesChart, formatDateToCustomString, parseDateStringNative, triggerInteractiveEvents } from './utils/general.ts';
 
 const app = express();
 app.use(cors());
@@ -13,6 +13,16 @@ app.use(express.json());
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 let connected = false;
+let newProviders: NewsProvider[] = [
+    { providerCode: 'BRFG', providerName: 'Briefing.com General Market Columns' },
+    { providerCode: 'BRFUPDN', providerName: 'Briefing.com Analyst Actions' },
+    { providerCode: 'DJ-N', providerName: 'Dow Jones News Service' },
+    { providerCode: 'DJ-RT', providerName: 'Dow Jones Trader News' },
+    { providerCode: 'DJ-RTA', providerName: 'Dow Jones Real-Time News Asia Pacific' },
+    { providerCode: 'DJ-RTE', providerName: 'Dow Jones Real-Time News Europe' },
+    { providerCode: 'DJ-RTG', providerName: 'Dow Jones Real-Time News Global' },
+    { providerCode: 'DJNL', providerName: 'Dow Jones Newsletters' },
+];
 const prompt = `You are a knowledgeable financial analyst. I will provide you with JSON data for a specific stock.
 First, search the web for recent news, company reports, and market updates that could influence the stock's price.
 Next, analyze both the data you collected and the JSON data I provided.
@@ -53,11 +63,23 @@ ib.on(EventName.error, (error: Error, code: ErrorCode, reqId: number) => {
 });
 
 ib.on(EventName.newsProviders, (newsProviders: NewsProvider[]) => {
-    console.log('Available news providers:', newsProviders);
+    // console.log('Available news providers:', newsProviders);
+    newProviders = newProviders;
 });
 
 ib.on(EventName.contractDetails, (reqId: number, contractDetails: ContractDetails) => {
     console.log('contractDetails - here', contractDetails);
+    const providersCodeFormat = newProviders.map((provider) => provider.providerCode).join('+');
+    console.log('providersCodeFormat', providersCodeFormat);
+    const date = new Date();
+    const today = formatDateToCustomString(date);
+    date.setMonth(date.getMonth() - 1);
+    const beforeOneMonth = formatDateToCustomString(date);
+    ib.reqHistoricalNews(3002, contractDetails.contract.conId, providersCodeFormat, beforeOneMonth, today, 50, null);
+});
+
+ib.on(EventName.historicalNewsEnd, (reqId: number, hasMore: boolean) => {
+    console.log('hasMore', hasMore);
 });
 
 ib.on(EventName.historicalNews, (reqId: number, time: string, providerCode: string, articleId: string, headline: string) => {
@@ -66,7 +88,7 @@ ib.on(EventName.historicalNews, (reqId: number, time: string, providerCode: stri
         providerCode,
         headline,
     };
-    console.log(newsData);
+    console.log('historicalNews', newsData);
 });
 
 if (!connected) {
