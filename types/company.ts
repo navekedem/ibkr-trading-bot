@@ -36,3 +36,10 @@ export interface CompanyAnalysisResponse {
     confidenceScore: number;
     keyInsights: string;
 }
+export interface CompanyNewsHeadline {
+    reqId: number;
+    time: string;
+    providerCode: string;
+    articleId: string;
+    headline: string;
+}

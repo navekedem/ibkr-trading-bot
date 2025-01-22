@@ -82,15 +82,6 @@ ib.on(EventName.historicalNewsEnd, (reqId: number, hasMore: boolean) => {
     console.log('hasMore', hasMore);
 });
 
-ib.on(EventName.historicalNews, (reqId: number, time: string, providerCode: string, articleId: string, headline: string) => {
-    const newsData = {
-        time,
-        providerCode,
-        headline,
-    };
-    console.log('historicalNews', newsData);
-});
-
 if (!connected) {
     ib.connect();
 }
@@ -139,6 +130,16 @@ wss.on('connection', (ws: WebSocket) => {
             ws.send(JSON.stringify(aggregatedData));
         },
     );
+    ib.on(EventName.historicalNews, (reqId: number, time: string, providerCode: string, articleId: string, headline: string) => {
+        const newsData = {
+            reqId,
+            time,
+            providerCode,
+            headline,
+            articleId,
+        };
+        ws.send(JSON.stringify(newsData));
+    });
 });
 
 app.post('/analyze', async (req, res) => {
