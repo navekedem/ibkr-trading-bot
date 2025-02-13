@@ -12,8 +12,7 @@ const defaultProps: LayoutGridProps = {
     measureBeforeMount: false,
     useCSSTransforms: true,
     margin: [20, 20] as [number, number],
-    autoSize: true,
-    containerPadding: [20, 0] as [number, number],
+    // containerPadding: [20, 0] as [number, number],
     draggableHandle: '.layout-block-title',
 };
 
@@ -23,7 +22,7 @@ export const LayoutGrid: React.FC<LayoutGridProps> = (props) => {
 
     return (
         <ResponsiveReactGridLayout {...defaultProps} {...rest}>
-            {rest.layouts?.md.map((itm: Layout, i: number) => (
+            {rest.layouts?.lg.map((itm: Layout, i: number) => (
                 <div key={itm.i} data-grid={itm} className="block">
                     {Array.isArray(children) ? (children as ReactNode[])?.find((cp: any) => cp?.key === itm.i) || null : children}
                 </div>

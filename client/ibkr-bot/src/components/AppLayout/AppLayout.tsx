@@ -26,9 +26,9 @@ export const AppLayout: React.FC = () => {
             <SelectedStockDataContext.Provider value={stockData}>
                 <Flex vertical={true} style={{ height: '100%' }}>
                     <AppBar setSelectedStock={setSelectedStock} />
-                    <Flex flex={1} style={{ position: 'relative', gap: '10px', overflowY: 'auto', overflowX: 'hidden' }}>
+                    <Flex flex={1} style={{ position: 'relative', gap: '10px', overflowX: 'hidden' }}>
                         <SideNav />
-                        <div style={{ flex: 1, padding: '20px' }}>
+                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
                             {!selectedStock ? (
                                 <NoSelectedStockContent />
                             ) : (

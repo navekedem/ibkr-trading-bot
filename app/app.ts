@@ -21,29 +21,30 @@ let newProviders: NewsProvider[] = [
     { providerCode: 'DJ-RTA', providerName: 'Dow Jones Real-Time News Asia Pacific' },
     { providerCode: 'DJ-RTE', providerName: 'Dow Jones Real-Time News Europe' },
     { providerCode: 'DJ-RTG', providerName: 'Dow Jones Real-Time News Global' },
-    { providerCode: 'DJNL', providerName: 'Dow Jones Newsletters' },
 ];
-const prompt = `You are a knowledgeable financial analyst. I will provide you with JSON data for a specific stock.
-First, search the web for recent news, company reports, and market updates that could influence the stock's price.
+
+const prompt = `You are a knowledgeable financial analyst specializing in swing trading. I will provide you with JSON data for a specific stock.
+First, search the web for recent news, company reports, and market updates from the past 30 days that could influence the stock's price.
 Next, analyze both the data you collected and the JSON data I provided.
 Finally, return your analysis strictly in the following JSON format:
 {
-    "position": "",        // Options: "long" or "short"  
-    "buyPrice": "",        // Recommended buy price  
-    "sellPrice": "",       // Target sell price  
-    "stoploss": "",        // Suggested stop-loss price  
-    "riskLevel": "",       // Options: "low", "medium", "high"  
-    "confidenceScore": "", // Confidence in analysis (0-100%)  
-    "keyInsights": ""      // Brief summary of important news/events affecting the stock  
+    "position": "",        // Options: "long" or "short"
+    "buyPrice": "",        // Recommended buy price
+    "sellPrice": "",       // Target sell price
+    "stoploss": "",        // Suggested stop-loss price
+    "riskLevel": "",       // Options: "low", "medium", "high"
+    "confidenceScore": "", // Confidence in analysis (0-100%)
+    "expectedDuration": "",// Expected trade duration in days (maximum 3 days)
+    "keyInsights": ""      // Brief summary of important news/events affecting the stock
 }
-
 
 ⚠️ Important: Provide only the JSON response in the exact format above—no additional text or explanations.
 
 Additional Notes:
-Focus on short-term trading opportunities.
+Focus on swing trading opportunities with a maximum trade duration of 7 days.
 Prioritize information from the past 30 days.
 Ignore speculative news with low credibility.
+Utilize technical indicators such as moving averages, support and resistance, Relative Strength Index (RSI), and volume trends to inform your analysis.
 `;
 
 const ib = new IBApi({ port: 7497 });
@@ -135,7 +136,7 @@ wss.on('connection', (ws: WebSocket) => {
             reqId,
             time,
             providerCode,
-            headline,
+            headline: headline.split('}')[1],
             articleId,
         };
         ws.send(JSON.stringify(newsData));
@@ -148,39 +149,51 @@ app.post('/analyze', async (req, res) => {
         if (!companyAnalysis) {
             return res.status(400).json({ error: 'Company analysis is required' });
         }
-        const response = await fetch('https://api.perplexity.ai/chat/completions', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: 'llama-3.1-sonar-small-128k-online',
-                temperature: 0.2,
-                top_p: 0.9,
-                search_domain_filter: ['perplexity.ai'],
-                return_images: false,
-                return_related_questions: false,
-                search_recency_filter: 'month',
-                top_k: 0,
-                stream: false,
-                presence_penalty: 0,
-                frequency_penalty: 1,
-                messages: [
-                    {
-                        role: 'system',
-                        content: prompt,
-                    },
-                    {
-                        role: 'user',
-                        content: JSON.stringify(companyAnalysis),
-                    },
-                ],
-            }),
+        // const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        //     method: 'POST',
+        //     headers: {
+        //         Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({
+        //         model: 'sonar',
+        //         temperature: 0.2,
+        //         top_p: 0.9,
+        //         search_domain_filter: ['perplexity.ai'],
+        //         return_images: false,
+        //         return_related_questions: false,
+        //         search_recency_filter: 'month',
+        //         top_k: 0,
+        //         stream: false,
+        //         presence_penalty: 0,
+        //         frequency_penalty: 1,
+        //         messages: [
+        //             {
+        //                 role: 'system',
+        //                 content: prompt,
+        //             },
+        //             {
+        //                 role: 'user',
+        //                 content: JSON.stringify(companyAnalysis),
+        //             },
+        //         ],
+        //     }),
+        // });
+        // const data = await response.json();
+        // console.log('data', JSON.stringify(data));
+        // const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
+        // const analysisResponse = JSON.parse(message);
+        res.json({
+            position: 'long',
+            buyPrice: '350',
+            sellPrice: '373',
+            stoploss: '325',
+            riskLevel: 'medium',
+            confidenceScore: '60',
+            expectedDuration: '3',
+            keyInsights:
+                "Tesla's stock has experienced recent volatility, with a decline from its highs. However, it maintains strong long-term prospects due to diverse revenue sources. The stock is currently at a support level around $350, which could present a buying opportunity. Analysts have mixed views, but some see potential for recovery.",
         });
-        const data = await response.json();
-        const analysisResponse = JSON.parse(data?.choices?.[0].message.content);
-        res.json(analysisResponse);
     } catch (error) {
         console.error('Analysis error:', error);
         res.status(500).json({

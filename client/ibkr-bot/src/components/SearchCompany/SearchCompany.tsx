@@ -1,20 +1,27 @@
 import { useMutation } from '@tanstack/react-query';
 import { AutoComplete } from 'antd';
-import { useContext, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Company } from '../../../../../types/company';
 import { getCompanies } from '../../api/get-companies/get-companies';
+import { useDebounce } from '../../hooks/useDebounce';
 import { formatData } from '../../utils/formatApiData';
-import { SelectedStockContext } from '../AppLayout/AppLayout';
 
 export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {
-    const selectedStock = useContext(SelectedStockContext);
     const [formattedData, setFormattedData] = useState<Company[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
     const { mutate } = useMutation({
         mutationFn: async (searchValue: string) => await getCompanies(searchValue),
         onSuccess(data, variables, context) {
             setFormattedData(formatData(data));
         },
     });
+
+    useEffect(() => {
+        if (!debouncedSearchTerm) return;
+        handleOnSearch(debouncedSearchTerm);
+    }, [debouncedSearchTerm]);
 
     const handleOnSearch = (searchValue: string) => {
         if (searchValue.length < 3) return;
@@ -23,7 +30,9 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
 
     const handleOnSelect = (selectedItemValue: string) => {
         const selectedItem = formattedData.find((item) => item.cik === selectedItemValue) || null;
+        if (!selectedItem) return;
         setSelectedStock(selectedItem);
+        setSearchTerm(selectedItem.name);
     };
 
     const renderItem = (item: Company) => {
@@ -44,11 +53,14 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
                     label: renderItem(item),
                 }))}
                 placeholder={'Search Company'}
-                onSearch={handleOnSearch}
+                onSearch={(value) => setSearchTerm(value)}
                 onSelect={handleOnSelect}
-                onClear={() => setSelectedStock(null)}
+                onClear={() => {
+                    setSelectedStock(null);
+                    setSearchTerm('');
+                }}
                 allowClear={true}
-                value={selectedStock?.name}
+                value={searchTerm}
                 className="search-autocomplete"
                 style={{
                     width: '400px',

@@ -10,9 +10,9 @@ import { LayoutGrid } from '../LayoutGrid/LayoutGrid';
 import { LayoutItemTitle } from '../LayoutGrid/LayoutItemTitle';
 
 const ChartsLayout: Layouts = {
-    md: [
-        { i: 'day', x: 0, y: 0, w: 12, h: 5, minW: 4, minH: 5 },
-        { i: 'hour', x: 0, y: 1, w: 12, h: 5, minW: 4, minH: 5 },
+    lg: [
+        { i: 'day', x: 0, y: 0, w: 6, h: 5, minW: 4, minH: 5 },
+        { i: 'hour', x: 6, y: 0, w: 6, h: 5, minW: 4, minH: 5 },
         { i: 'minute', x: 0, y: 2, w: 12, h: 5, minW: 4, minH: 5 },
     ],
 };
@@ -67,20 +67,20 @@ export const MarketDataGraphs: React.FC = () => {
             </div>
             <div key={'minute'}>
                 <LayoutItemTitle title="Minutes Chart" chartId={MinutesChartOptions.chart?.id!} />
-                {!!minutesChartData.length && (
-                    <ReactApexChart
-                        type="candlestick"
-                        height={500}
-                        options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
-                        series={[
-                            {
-                                data: handleChartData(minutesChartData),
-                                name: 'candle',
-                                type: 'candlestick',
-                            },
-                        ]}
-                    />
-                )}
+                <ReactApexChart
+                    type="candlestick"
+                    height={500}
+                    options={createAnnotationsLines(minutesChartData, MinutesChartOptions, true)}
+                    series={[
+                        {
+                            data: handleChartData(minutesChartData),
+                            name: 'candle',
+                            type: 'candlestick',
+                        },
+                    ]}
+                />
+                {/* {!!minutesChartData.length && (
+                )} */}
             </div>
         </LayoutGrid>
     );

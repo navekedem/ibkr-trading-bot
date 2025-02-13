@@ -1,5 +1,5 @@
 import { dc, macd, rsi, vpt } from 'indicatorts';
-import { Company, CompanyAnalysis } from '../../../../types/company';
+import { Company, CompanyAnalysis, CompanyNewsHeadline } from '../../../../types/company';
 import { MarketData } from '../../../../types/market-data';
 import { findResistance } from './findResistance';
 import { findSupport } from './findSupport';
@@ -7,6 +7,7 @@ import { findSupport } from './findSupport';
 const macdDefaultConfig = { fast: 12, slow: 26, signal: 9 };
 const rsiConfig = { period: 14 };
 const dcConfig = { period: 4 };
+
 export const handleChartData = (chartData: MarketData[]): any => {
     return chartData.map((item) => handleSingleCandle(item)).filter(Boolean);
 };
@@ -41,7 +42,7 @@ export const getIndicatorsValues = (closingPrices: number[], volumes: number[]) 
     };
 };
 
-export const createAnalysis = (prices: MarketData[], company: Company): CompanyAnalysis => {
+export const createAnalysis = (prices: MarketData[], company: Company, newsHeadlines: CompanyNewsHeadline[]): CompanyAnalysis => {
     const support = findSupport(prices).map((line) => line.value);
     const resistance = findResistance(prices).map((line) => line.value);
     const stockLatestPrices = prices.map(({ close, date, volume }) => ({
@@ -52,6 +53,7 @@ export const createAnalysis = (prices: MarketData[], company: Company): CompanyA
     const closingPrices = prices.map(({ close }) => close);
     const volumes = prices.map(({ close }) => close);
     const indicators = getIndicatorsValues(closingPrices, volumes);
+    const latestNewsTitles = newsHeadlines.map(({ headline }) => headline);
 
     return {
         name: company.name,
@@ -64,6 +66,6 @@ export const createAnalysis = (prices: MarketData[], company: Company): CompanyA
         indicators,
         maxResistance: Math.max(...resistance),
         minSupport: Math.min(...support),
-        latestNewsTitles: [],
+        latestNewsTitles,
     };
 };

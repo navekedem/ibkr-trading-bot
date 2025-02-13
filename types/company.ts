@@ -33,8 +33,9 @@ export interface CompanyAnalysisResponse {
     sellPrice: number;
     stoploss: number;
     riskLevel: string;
-    confidenceScore: number;
+    confidenceScore: string;
     keyInsights: string;
+    expectedDuration: string;
 }
 export interface CompanyNewsHeadline {
     reqId: number;

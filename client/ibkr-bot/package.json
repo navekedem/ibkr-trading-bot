@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.3.2",
     "@tanstack/react-query": "^5.60.5",
     "antd": "^5.23.1",
     "apexcharts": "^3.37.3",

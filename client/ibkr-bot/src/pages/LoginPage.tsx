@@ -16,7 +16,11 @@ export const LoginPage: React.FC = () => {
                     <div style={{ fontSize: '1.3rem' }}>
                         Before you are login into the system, Download the TWS desktop app and login to your interactive brokers account
                     </div>
-                    <Button type="primary" style={{ width: '20%', margin: '1rem auto', fontWeight: 'bold' }} onClick={() => navigate('/Home')}>
+                    <Button
+                        type="primary"
+                        style={{ width: '20%', margin: '1rem auto', fontWeight: 'bold' }}
+                        onClick={() => navigate('/overview', { replace: true })}
+                    >
                         Login
                     </Button>
                 </div>
