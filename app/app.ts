@@ -1,5 +1,5 @@
-import type { ContractDetails, NewsProvider } from '@stoqey/ib';
-import { ErrorCode, EventName, IBApi, Stock } from '@stoqey/ib';
+import type { ContractDetails, NewsProvider, Order } from '@stoqey/ib';
+import { ErrorCode, EventName, IBApi, OrderAction, OrderType, Stock } from '@stoqey/ib';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
@@ -29,14 +29,19 @@ Next, analyze both the data you collected and the JSON data I provided.
 Finally, return your analysis strictly in the following JSON format:
 {
     "position": "",        // Options: "long" or "short"
-    "buyPrice": "",        // Recommended buy price
-    "sellPrice": "",       // Target sell price
-    "stoploss": "",        // Suggested stop-loss price
+    "enterPosition": "",   // Recommended entry price
+    "takeProfit": "",      // Target take-profit price (1.5% - 3% above entry, based on analysis)
+    "stoploss": "",        // Suggested stop-loss price (0.5% below take-profit)
     "riskLevel": "",       // Options: "low", "medium", "high"
     "confidenceScore": "", // Confidence in analysis (0-100%)
     "expectedDuration": "",// Expected trade duration in days (maximum 3 days)
     "keyInsights": ""      // Brief summary of important news/events affecting the stock
 }
+Important Guidelines:
+
+Take-Profit Calculation: Set the takeProfit price between 1.5% and 3% above the enterPosition price. Determine the exact percentage based on price action, technical indicators, recent news, and sentiment analysis.
+
+Stop-Loss Calculation: Set the stopLoss price exactly 0.5% below the takeProfit price to manage risk effectively.
 
 ⚠️ Important: Provide only the JSON response in the exact format above—no additional text or explanations.
 
@@ -180,24 +185,86 @@ app.post('/analyze', async (req, res) => {
         //     }),
         // });
         // const data = await response.json();
-        // console.log('data', JSON.stringify(data));
         // const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
         // const analysisResponse = JSON.parse(message);
+        // res.json(analysisResponse);
         res.json({
             position: 'long',
-            buyPrice: '350',
-            sellPrice: '373',
-            stoploss: '325',
+            enterPosition: '200.00',
+            takeProfit: '206.00',
+            stoploss: '205.49',
             riskLevel: 'medium',
-            confidenceScore: '60',
+            confidenceScore: '70',
             expectedDuration: '3',
             keyInsights:
-                "Tesla's stock has experienced recent volatility, with a decline from its highs. However, it maintains strong long-term prospects due to diverse revenue sources. The stock is currently at a support level around $350, which could present a buying opportunity. Analysts have mixed views, but some see potential for recovery.",
+                "Amazon's recent AI investments and strong advertising revenue growth are positive factors. The stock has been under pressure but is near support levels, suggesting potential for a rebound.",
         });
     } catch (error) {
         console.error('Analysis error:', error);
         res.status(500).json({
             error: 'Failed to analyze company',
+            details: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+
+app.post('/submit-order', (req, res) => {
+    const { symbol, action, quantity, entryPrice, stopLoss, takeProfit } = req.body;
+
+    if (!symbol || !action || !quantity || !entryPrice || !stopLoss || !takeProfit) {
+        return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    try {
+        const contract = new Stock(symbol, undefined, 'USD');
+        const mainOrder: Order = {
+            action: action,
+            totalQuantity: quantity,
+            orderType: OrderType.LMT,
+            lmtPrice: entryPrice,
+            transmit: false, // This will be part of bracket order
+            tif: 'GTC',
+        };
+
+        const stopOrder: Order = {
+            action: action === OrderAction.BUY ? OrderAction.SELL : OrderAction.BUY,
+            totalQuantity: quantity,
+            orderType: OrderType.STP,
+            auxPrice: stopLoss,
+            transmit: false,
+            tif: 'GTC',
+        };
+
+        const takeProfitOrder: Order = {
+            action: action === OrderAction.BUY ? OrderAction.SELL : OrderAction.BUY,
+            totalQuantity: quantity,
+            orderType: OrderType.LMT,
+            lmtPrice: takeProfit,
+            transmit: true, // Last order in the bracket needs to transmit
+            tif: 'GTC',
+        };
+
+        // Getting next valid order ID
+        ib.reqIds(-1);
+        ib.once(EventName.nextValidId, (orderId: number) => {
+            // Place bracket order
+            ib.placeOrder(orderId, contract, mainOrder);
+            ib.placeOrder(orderId + 1, contract, { ...stopOrder, parentId: orderId });
+            ib.placeOrder(orderId + 2, contract, { ...takeProfitOrder, parentId: orderId });
+
+            res.json({
+                success: true,
+                message: 'Bracket order placed successfully',
+                mainOrderId: orderId,
+                stopOrderId: orderId + 1,
+                takeProfitOrderId: orderId + 2,
+            });
+        });
+    } catch (error) {
+        console.error('Order placement error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to place order',
             details: error instanceof Error ? error.message : 'Unknown error',
         });
     }

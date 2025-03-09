@@ -24,8 +24,8 @@ const headlineStyle = {
 };
 
 export const AnalysisContent: React.FC<CompanyAnalysisResponse> = ({
-    buyPrice,
-    sellPrice,
+    entryPrice,
+    takeProfit,
     keyInsights,
     confidenceScore,
     stoploss,
@@ -42,12 +42,12 @@ export const AnalysisContent: React.FC<CompanyAnalysisResponse> = ({
                     <div>{position}</div>
                 </div>
                 <div style={flexStyle}>
-                    <div style={headlineStyle}>Buy Price</div>
-                    <div>${buyPrice}</div>
+                    <div style={headlineStyle}>Entry Price</div>
+                    <div>${entryPrice}</div>
                 </div>
                 <div style={flexStyle}>
-                    <div style={headlineStyle}>Sell Price</div>
-                    <div>${sellPrice}</div>
+                    <div style={headlineStyle}>Take Profit</div>
+                    <div>${takeProfit}</div>
                 </div>
                 <div style={flexStyle}>
                     <div style={headlineStyle}>Confidence Score (0-100%)</div>

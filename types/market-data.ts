@@ -1,22 +1,30 @@
 export interface MarketData {
     reqId: number;
-    date: number; 
-    open: number; 
-    high: number; 
-    low: number; 
-    close: number; 
+    date: number;
+    open: number;
+    high: number;
+    low: number;
+    close: number;
     volume: number;
     WAP: number;
 }
 
-
 export const isMarketData = (data: MarketData | null): data is MarketData => {
-    if (!data) return false
+    if (!data) return false;
     return (data as MarketData).reqId !== undefined;
-}
+};
 
 export interface AnnotationLine {
-    value: number; 
-    type: "support" | 'resistance'; 
+    value: number;
+    type: 'support' | 'resistance';
     color: string;
+}
+
+export interface SubmitOrderRequest {
+    symbol: string;
+    action: string;
+    quantity: number;
+    entryPrice: number;
+    stopLoss: number;
+    takeProfit: number;
 }

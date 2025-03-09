@@ -25,13 +25,18 @@ export const StockTitle: React.FC<{ selectedStock: Company }> = ({ selectedStock
         setIsOpen(true);
     };
 
+    const submitOrder = () => {
+        setIsOpen(false);
+        console.log('submit order');
+    };
+
     return (
         <>
             <ModalAnalysis
                 open={isOpen}
                 title={`${selectedStock?.name} (${selectedStock?.ticker}) Analysis`}
                 onClose={() => setIsOpen(false)}
-                onOk={() => setIsOpen(false)}
+                onOk={submitOrder}
             >
                 {analysisResponse && <AnalysisContent {...analysisResponse} />}
             </ModalAnalysis>
