@@ -29,9 +29,9 @@ export interface CompanyAnalysis {
 
 export interface CompanyAnalysisResponse {
     position: string;
-    entryPrice: number;
-    takeProfit: number;
-    stoploss: number;
+    entryPrice: string;
+    takeProfit: string;
+    stoploss: string;
     riskLevel: string;
     confidenceScore: string;
     keyInsights: string;

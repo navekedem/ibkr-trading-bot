@@ -1,8 +1,10 @@
+import { OrderAction } from '@stoqey/ib';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Flex } from 'antd';
 import { useContext, useState } from 'react';
 import { Company, CompanyAnalysisResponse } from '../../../../../types/company';
 import { sendStockAnalysis } from '../../api/send-stock-analysis/send-stock-analysis';
+import { submitAIOrder } from '../../api/submit-order/submit-order';
 import { createAnalysis } from '../../utils/handleChartData';
 import { SelectedStockDataContext } from '../AppLayout/AppLayout';
 import { AnalysisContent, ModalAnalysis } from '../ModalAnalysis/ModalAnalysis';
@@ -13,6 +15,9 @@ export const StockTitle: React.FC<{ selectedStock: Company }> = ({ selectedStock
     const [analysisResponse, setAnalysisResponse] = useState<CompanyAnalysisResponse>();
     const { mutateAsync, isPending } = useMutation({
         mutationFn: sendStockAnalysis,
+    });
+    const { mutateAsync: sendOrder, isPending: isOrderPending } = useMutation({
+        mutationFn: submitAIOrder,
     });
 
     const sendAnalysis = async () => {
@@ -25,9 +30,18 @@ export const StockTitle: React.FC<{ selectedStock: Company }> = ({ selectedStock
         setIsOpen(true);
     };
 
-    const submitOrder = () => {
-        setIsOpen(false);
-        console.log('submit order');
+    const submitOrder = async () => {
+        if (!analysisResponse) return;
+        const res = await sendOrder({
+            action: analysisResponse.position === 'long' ? OrderAction.BUY : OrderAction.SELL,
+            entryPrice: parseInt(analysisResponse.entryPrice),
+            quantity: 10,
+            stoploss: parseInt(analysisResponse.stoploss),
+            symbol: selectedStock.ticker,
+            takeProfit: parseInt(analysisResponse.takeProfit),
+        });
+        console.log(res);
+        // setIsOpen(false);
     };
 
     return (

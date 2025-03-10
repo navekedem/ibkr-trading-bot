@@ -25,6 +25,6 @@ export interface SubmitOrderRequest {
     action: string;
     quantity: number;
     entryPrice: number;
-    stopLoss: number;
+    stoploss: number;
     takeProfit: number;
 }

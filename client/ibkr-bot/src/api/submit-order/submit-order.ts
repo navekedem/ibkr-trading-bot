@@ -1,6 +1,6 @@
 import { SubmitOrderRequest } from '../../../../../types/market-data';
 
-export const sendStockAnalysis = async (orderRequest: SubmitOrderRequest): Promise<{ orderId: string }> => {
+export const submitAIOrder = async (orderRequest: SubmitOrderRequest): Promise<{ orderId: string }> => {
     const errorMessage = 'Error in submit order';
     try {
         const response = await fetch('http://localhost:8080/submit-order', {

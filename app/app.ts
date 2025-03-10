@@ -29,7 +29,7 @@ Next, analyze both the data you collected and the JSON data I provided.
 Finally, return your analysis strictly in the following JSON format:
 {
     "position": "",        // Options: "long" or "short"
-    "enterPosition": "",   // Recommended entry price
+    "entryPrice": "",      // Recommended entry price
     "takeProfit": "",      // Target take-profit price (1.5% - 3% above entry, based on analysis)
     "stoploss": "",        // Suggested stop-loss price (0.5% below take-profit)
     "riskLevel": "",       // Options: "low", "medium", "high"
@@ -41,7 +41,7 @@ Important Guidelines:
 
 Take-Profit Calculation: Set the takeProfit price between 1.5% and 3% above the enterPosition price. Determine the exact percentage based on price action, technical indicators, recent news, and sentiment analysis.
 
-Stop-Loss Calculation: Set the stopLoss price exactly 0.5% below the takeProfit price to manage risk effectively.
+Stop-Loss Calculation: Set the stoploss price exactly 0.5% below the takeProfit price to manage risk effectively.
 
 ⚠️ Important: Provide only the JSON response in the exact format above—no additional text or explanations.
 
@@ -154,51 +154,40 @@ app.post('/analyze', async (req, res) => {
         if (!companyAnalysis) {
             return res.status(400).json({ error: 'Company analysis is required' });
         }
-        // const response = await fetch('https://api.perplexity.ai/chat/completions', {
-        //     method: 'POST',
-        //     headers: {
-        //         Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-        //         'Content-Type': 'application/json',
-        //     },
-        //     body: JSON.stringify({
-        //         model: 'sonar',
-        //         temperature: 0.2,
-        //         top_p: 0.9,
-        //         search_domain_filter: ['perplexity.ai'],
-        //         return_images: false,
-        //         return_related_questions: false,
-        //         search_recency_filter: 'month',
-        //         top_k: 0,
-        //         stream: false,
-        //         presence_penalty: 0,
-        //         frequency_penalty: 1,
-        //         messages: [
-        //             {
-        //                 role: 'system',
-        //                 content: prompt,
-        //             },
-        //             {
-        //                 role: 'user',
-        //                 content: JSON.stringify(companyAnalysis),
-        //             },
-        //         ],
-        //     }),
-        // });
-        // const data = await response.json();
-        // const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
-        // const analysisResponse = JSON.parse(message);
-        // res.json(analysisResponse);
-        res.json({
-            position: 'long',
-            enterPosition: '200.00',
-            takeProfit: '206.00',
-            stoploss: '205.49',
-            riskLevel: 'medium',
-            confidenceScore: '70',
-            expectedDuration: '3',
-            keyInsights:
-                "Amazon's recent AI investments and strong advertising revenue growth are positive factors. The stock has been under pressure but is near support levels, suggesting potential for a rebound.",
+        const response = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'sonar',
+                temperature: 0.2,
+                top_p: 0.9,
+                search_domain_filter: ['perplexity.ai'],
+                return_images: false,
+                return_related_questions: false,
+                search_recency_filter: 'month',
+                top_k: 0,
+                stream: false,
+                presence_penalty: 0,
+                frequency_penalty: 1,
+                messages: [
+                    {
+                        role: 'system',
+                        content: prompt,
+                    },
+                    {
+                        role: 'user',
+                        content: JSON.stringify(companyAnalysis),
+                    },
+                ],
+            }),
         });
+        const data = await response.json();
+        const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
+        const analysisResponse = JSON.parse(message);
+        res.json(analysisResponse);
     } catch (error) {
         console.error('Analysis error:', error);
         res.status(500).json({
@@ -209,9 +198,9 @@ app.post('/analyze', async (req, res) => {
 });
 
 app.post('/submit-order', (req, res) => {
-    const { symbol, action, quantity, entryPrice, stopLoss, takeProfit } = req.body;
-
-    if (!symbol || !action || !quantity || !entryPrice || !stopLoss || !takeProfit) {
+    const { symbol, action, quantity, entryPrice, stoploss, takeProfit } = req.body;
+    console.log(req.body);
+    if (!symbol || !action || !quantity || !entryPrice || !stoploss || !takeProfit) {
         return res.status(400).json({ error: 'All fields are required' });
     }
 
@@ -230,7 +219,7 @@ app.post('/submit-order', (req, res) => {
             action: action === OrderAction.BUY ? OrderAction.SELL : OrderAction.BUY,
             totalQuantity: quantity,
             orderType: OrderType.STP,
-            auxPrice: stopLoss,
+            auxPrice: stoploss,
             transmit: false,
             tif: 'GTC',
         };
