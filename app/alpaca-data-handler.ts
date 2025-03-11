@@ -2,8 +2,6 @@ import Alpaca from '@alpacahq/alpaca-trade-api';
 import WebSocket from 'ws';
 const wss = new WebSocket.Server({ port: 8080 });
 const alpaca = new Alpaca({
-    keyId: 'PK0QA42MWURMF476WSJC',
-    secretKey: 'tNd1pISH73KjhAfGqSyV9aerpyP8oEQNisf3JTkJ',
     baseUrl: 'https://paper-api.alpaca.markets',
     paper: true,
 });

@@ -31,7 +31,7 @@ Finally, return your analysis strictly in the following JSON format:
     "position": "",        // Options: "long" or "short"
     "entryPrice": "",      // Recommended entry price
     "takeProfit": "",      // Target take-profit price (1.5% - 3% above entry, based on analysis)
-    "stoploss": "",        // Suggested stop-loss price (0.5% below take-profit)
+    "stoploss": "",        // Suggested stop-loss price (1% below entry-price)
     "riskLevel": "",       // Options: "low", "medium", "high"
     "confidenceScore": "", // Confidence in analysis (0-100%)
     "expectedDuration": "",// Expected trade duration in days (maximum 3 days)
@@ -41,7 +41,7 @@ Important Guidelines:
 
 Take-Profit Calculation: Set the takeProfit price between 1.5% and 3% above the enterPosition price. Determine the exact percentage based on price action, technical indicators, recent news, and sentiment analysis.
 
-Stop-Loss Calculation: Set the stoploss price exactly 0.5% below the takeProfit price to manage risk effectively.
+Stop-Loss Calculation: Set the stoploss price exactly 1% below the entryPrice price to manage risk effectively.
 
 ⚠️ Important: Provide only the JSON response in the exact format above—no additional text or explanations.
 
