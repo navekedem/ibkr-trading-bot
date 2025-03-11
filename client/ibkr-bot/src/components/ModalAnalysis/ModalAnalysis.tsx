@@ -1,5 +1,5 @@
+import { CompanyAnalysisResponse } from '@app-types/company';
 import { Modal, ModalProps } from 'antd';
-import { CompanyAnalysisResponse } from '../../../../../types/company';
 
 type ModalAnalysisProps = ModalProps & {
     title: string;

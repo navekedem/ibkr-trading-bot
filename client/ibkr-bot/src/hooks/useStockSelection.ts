@@ -1,6 +1,6 @@
+import { Company, CompanyNewsHeadline } from '@app-types/company';
+import { MarketData } from '@app-types/market-data';
 import { useEffect, useState } from 'react';
-import { Company, CompanyNewsHeadline } from '../../../../types/company';
-import { MarketData } from '../../../../types/market-data';
 import { useWebSocket } from './useWebSocket';
 
 export const useStockSelection = ({ selectedStock }: { selectedStock: Company | null }) => {

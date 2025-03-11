@@ -1,4 +1,4 @@
-import { CompanyAnalysis, CompanyAnalysisResponse } from '../../../../../types/company';
+import { CompanyAnalysis, CompanyAnalysisResponse } from '@app-types/company';
 
 export const sendStockAnalysis = async (companyAnalysis: CompanyAnalysis): Promise<CompanyAnalysisResponse> => {
     const errorMessage = 'Error in Get Company analysis';

@@ -1,7 +1,7 @@
+import { CompanyNewsHeadline } from '@app-types/company';
 import { pipeline, TextClassificationSingle } from '@huggingface/transformers';
 import { Card } from 'antd';
 import { useEffect, useState } from 'react';
-import { CompanyNewsHeadline } from '../../../../../types/company';
 
 const Sentiment = ({ sentiment }: { sentiment: TextClassificationSingle }) => {
     if (!sentiment) return null;

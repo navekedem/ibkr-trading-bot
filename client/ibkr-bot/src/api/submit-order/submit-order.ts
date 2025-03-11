@@ -1,4 +1,4 @@
-import { SubmitOrderRequest } from '../../../../../types/market-data';
+import { SubmitOrderRequest } from '@app-types/market-data';
 
 export const submitAIOrder = async (orderRequest: SubmitOrderRequest): Promise<{ orderId: string }> => {
     const errorMessage = 'Error in submit order';

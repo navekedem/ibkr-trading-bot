@@ -1,7 +1,7 @@
+import { MarketData } from '@app-types/market-data';
 import React, { useContext, useEffect, useRef } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Layouts } from 'react-grid-layout';
-import { MarketData } from '../../../../../types/market-data';
 import { DailyChartOptions, HourlyChartOptions, MinutesChartOptions } from '../../consts/apexChartOptions';
 import { createAnnotationsLines } from '../../utils/createAnnotationsLines';
 import { handleChartData } from '../../utils/handleChartData';

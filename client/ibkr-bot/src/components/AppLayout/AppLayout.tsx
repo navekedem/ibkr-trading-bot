@@ -1,8 +1,8 @@
+import { Company, CompanyNewsHeadline } from '@app-types/company';
+import { MarketData } from '@app-types/market-data';
 import { Flex } from 'antd';
 import { createContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Company, CompanyNewsHeadline } from '../../../../../types/company';
-import { MarketData } from '../../../../../types/market-data';
 import EmptyState from '../../assets/empty_state.png';
 import { useStockSelection } from '../../hooks/useStockSelection';
 import { AppBar } from '../AppBar/AppBar';

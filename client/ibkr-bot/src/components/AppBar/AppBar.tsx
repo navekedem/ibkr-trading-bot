@@ -1,7 +1,7 @@
+import { Company } from '@app-types/company';
 import { Button, Flex } from 'antd';
 import { FaHome } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { Company } from '../../../../../types/company';
 import { SearchCompany } from '../SearchCompany/SearchCompany';
 
 export const AppBar: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {

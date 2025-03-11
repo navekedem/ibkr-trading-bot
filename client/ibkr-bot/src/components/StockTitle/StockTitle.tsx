@@ -1,8 +1,8 @@
+import { Company, CompanyAnalysisResponse } from '@app-types/company';
 import { OrderAction } from '@stoqey/ib';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Flex } from 'antd';
 import { useContext, useState } from 'react';
-import { Company, CompanyAnalysisResponse } from '../../../../../types/company';
 import { sendStockAnalysis } from '../../api/send-stock-analysis/send-stock-analysis';
 import { submitAIOrder } from '../../api/submit-order/submit-order';
 import { createAnalysis } from '../../utils/handleChartData';

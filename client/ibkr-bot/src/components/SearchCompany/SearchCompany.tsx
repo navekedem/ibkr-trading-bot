@@ -1,7 +1,7 @@
+import { Company } from '@app-types/company';
 import { useMutation } from '@tanstack/react-query';
 import { AutoComplete } from 'antd';
 import { useEffect, useState } from 'react';
-import { Company } from '../../../../../types/company';
 import { getCompanies } from '../../api/get-companies/get-companies';
 import { useDebounce } from '../../hooks/useDebounce';
 import { formatData } from '../../utils/formatApiData';

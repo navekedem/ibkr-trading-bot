@@ -1,4 +1,4 @@
-import { Company } from '../../../../types/company';
+import { Company } from '@app-types/company';
 
 export const formatData = (data: any) => {
     return (
