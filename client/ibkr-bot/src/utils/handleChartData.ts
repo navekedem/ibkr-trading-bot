@@ -1,6 +1,6 @@
 import { Company, CompanyAnalysis, CompanyNewsHeadline } from '@app-types/company';
 import { MarketData } from '@app-types/market-data';
-import { dc, macd, rsi, vpt } from 'indicatorts';
+import { dc, macd, rsi, vpt,  } from 'indicatorts';
 import { findResistance } from './findResistance';
 import { findSupport } from './findSupport';
 
@@ -27,6 +27,7 @@ export const getIndicatorsValues = (closingPrices: number[], volumes: number[]) 
     const rsiResult = rsi(closingPrices, rsiConfig);
     const vptResult = vpt(closingPrices, volumes);
     const { upper, middle, lower } = dc(closingPrices, dcConfig);
+
     return {
         macd: {
             macdLine,
@@ -34,11 +35,11 @@ export const getIndicatorsValues = (closingPrices: number[], volumes: number[]) 
         },
         rsi: rsiResult,
         volumePriceTrend: vptResult,
-        donchianChannels: {
-            upper,
-            middle,
-            lower,
-        },
+        // donchianChannels: {
+        //     upper,
+        //     middle,
+        //     lower,
+        // },
     };
 };
 

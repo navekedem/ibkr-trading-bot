@@ -1,5 +1,5 @@
 import { CompanyNewsHeadline } from '@app-types/company';
-import { pipeline, TextClassificationSingle } from '@huggingface/transformers';
+import { TextClassificationSingle } from '@huggingface/transformers';
 import { Card } from 'antd';
 import { useEffect, useState } from 'react';
 
@@ -10,33 +10,21 @@ const Sentiment = ({ sentiment }: { sentiment: TextClassificationSingle }) => {
     return <span style={{ color: 'gray' }}>🟡 {sentiment.label}</span>;
 };
 
-export const NewsCard: React.FC<{ newsHeadline: CompanyNewsHeadline }> = ({ newsHeadline }) => {
+export const NewsCard: React.FC<{ newsHeadline: CompanyNewsHeadline; worker: Worker | null }> = ({ newsHeadline, worker }) => {
     const [sentiment, setSentiment] = useState<TextClassificationSingle[] | null>(null);
-
-    const getSentimentScore = async (text: string) => {
-        const pipe = await pipeline('sentiment-analysis', 'Xenova/distilroberta-finetuned-financial-news-sentiment-analysis', {
-            device: 'webgpu',
-        });
-        const out = await pipe(text);
-        return out;
-    };
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        getSentimentScore(newsHeadline.headline).then((res) => {
-            console.log(res);
-            // @ts-ignore
-            setSentiment(res);
-        });
-    }, [newsHeadline]);
+        if (!newsHeadline || !worker) return;
+        setIsLoading(true);
+        worker.postMessage({ text: newsHeadline.headline, id: newsHeadline.articleId });
+    }, [newsHeadline, worker]);
 
     return (
         <Card title={newsHeadline.headline} bordered={true} style={{ width: '48%', marginBottom: 16, boxShadow: '0 0 5px rgba(0, 0, 0, 0.1)' }}>
-            <p>
-                <b>Sentiment:</b> <Sentiment sentiment={sentiment?.[0]!} />
-            </p>
-            <p>
-                <b>Score:</b> {sentiment?.[0]?.score.toFixed(2)}
-            </p>
+            <p>{new Date(newsHeadline.time).toLocaleString()}</p>
+            <p>Source: {newsHeadline.providerCode}</p>
+            <p>Sentimet: {isLoading ? 'Loading...' : <Sentiment sentiment={sentiment?.[0]} />}</p>
         </Card>
     );
 };

@@ -1,5 +1,5 @@
 import { Company, CompanyAnalysisResponse } from '@app-types/company';
-import { OrderAction } from '@stoqey/ib';
+// import { OrderAction } from '@stoqey/ib';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Flex } from 'antd';
 import { useContext, useState } from 'react';
@@ -33,7 +33,7 @@ export const StockTitle: React.FC<{ selectedStock: Company }> = ({ selectedStock
     const submitOrder = async () => {
         if (!analysisResponse) return;
         const res = await sendOrder({
-            action: analysisResponse.position === 'long' ? OrderAction.BUY : OrderAction.SELL,
+            action: analysisResponse.position === 'long' ? 'BUY' : 'SELL',
             entryPrice: parseInt(analysisResponse.entryPrice),
             quantity: 10,
             stoploss: parseInt(analysisResponse.stoploss),
