@@ -1,5 +1,6 @@
 import { Company, CompanyNewsHeadline } from '@app-types/company';
 import { MarketData } from '@app-types/market-data';
+import { TextClassificationSingle } from '@huggingface/transformers';
 import { Flex } from 'antd';
 import { createContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
@@ -15,7 +16,9 @@ export const SelectedStockDataContext = createContext<{
     hourlyChartData: MarketData[];
     minutesChartData: MarketData[];
     newsHeadlines: CompanyNewsHeadline[];
-}>({ dailyChartData: [], hourlyChartData: [], minutesChartData: [], newsHeadlines: [] });
+    sentiments: Record<string, TextClassificationSingle[]>;
+    setSentiments: React.Dispatch<React.SetStateAction<Record<string, TextClassificationSingle[]>>>;
+}>({ dailyChartData: [], hourlyChartData: [], minutesChartData: [], newsHeadlines: [], sentiments: {}, setSentiments: () => {} });
 
 export const AppLayout: React.FC = () => {
     const [selectedStock, setSelectedStock] = useState<Company | null>(null);

@@ -1,5 +1,6 @@
 import { Company, CompanyNewsHeadline } from '@app-types/company';
 import { MarketData } from '@app-types/market-data';
+import { TextClassificationSingle } from '@huggingface/transformers';
 import { useEffect, useState } from 'react';
 import { useWebSocket } from './useWebSocket';
 
@@ -9,12 +10,14 @@ export const useStockSelection = ({ selectedStock }: { selectedStock: Company | 
     const [hourlyChartData, setHourlyChartData] = useState<MarketData[]>([]);
     const [minutesChartData, setMinutesChartData] = useState<MarketData[]>([]);
     const [newsHeadlines, setNewsHeadlines] = useState<CompanyNewsHeadline[]>([]);
+    const [sentiments, setSentiments] = useState<Record<string, TextClassificationSingle[]>>({});
 
     const initStockStates = () => {
         setDailyChartData([]);
         setHourlyChartData([]);
         setMinutesChartData([]);
         setNewsHeadlines([]);
+        setSentiments({});
     };
 
     useEffect(() => {
@@ -27,13 +30,15 @@ export const useStockSelection = ({ selectedStock }: { selectedStock: Company | 
             if (data.reqId === 6002) {
                 setMinutesChartData((prevState) => [...prevState, data]);
             }
+            if (data.reqId === 6003) {
+                console.log('data', data);
+            }
         };
     }, [ws]);
 
     useEffect(() => {
         if (!selectedStock) return;
         initStockStates();
-        console.log(selectedStock);
         ws?.send(JSON.stringify(selectedStock));
     }, [selectedStock, ws]);
 
@@ -42,5 +47,7 @@ export const useStockSelection = ({ selectedStock }: { selectedStock: Company | 
         hourlyChartData,
         minutesChartData,
         newsHeadlines,
+        sentiments,
+        setSentiments,
     };
 };

@@ -19,7 +19,6 @@ self.onmessage = async (e) => {
         return;
     }
     try {
-        console.log('try Sentiment analysis result:', text);
         const result = await sentimentPipeline(text);
         self.postMessage({ result, id });
     } catch (error) {

@@ -132,6 +132,7 @@ wss.on('connection', (ws: WebSocket) => {
         EventName.realtimeBar,
         (reqId: number, time: number, open: number, high: number, low: number, close: number, volume: number, wap: number, count: number) => {
             const aggregatedData = aggregateMinutesChart(reqId, open, high, low, close, volume);
+            console.log('aggregatedData', aggregatedData);
             if (!aggregatedData.date || (!aggregatedData.close && !aggregatedData.open)) return;
             ws.send(JSON.stringify(aggregatedData));
         },
