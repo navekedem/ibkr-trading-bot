@@ -51,7 +51,7 @@ export const AnalysisContent: React.FC<CompanyAnalysisResponse> = ({
                 </div>
                 <div style={flexStyle}>
                     <div style={headlineStyle}>Confidence Score (0-100%)</div>
-                    <div>{confidenceScore.includes('%') ? confidenceScore : `${confidenceScore}%`}</div>
+                    <div>{`${confidenceScore}%`}</div>
                 </div>
                 <div style={flexStyle}>
                     <div style={headlineStyle}>Stoploss</div>

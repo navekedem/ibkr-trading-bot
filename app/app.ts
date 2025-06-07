@@ -155,24 +155,66 @@ app.post('/analyze', async (req, res) => {
         if (!companyAnalysis) {
             return res.status(400).json({ error: 'Company analysis is required' });
         }
-        const response = await fetch('https://api.perplexity.ai/chat/completions', {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+                Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'sonar',
-                temperature: 0.2,
-                top_p: 0.9,
-                search_domain_filter: ['perplexity.ai'],
-                return_images: false,
-                return_related_questions: false,
-                search_recency_filter: 'month',
-                top_k: 0,
-                stream: false,
-                presence_penalty: 0,
-                frequency_penalty: 1,
+                model: 'meta-llama/llama-4-maverick:free',
+                response_format: {
+                    type: 'json_schema',
+                    json_schema: {
+                        name: 'financial_analysis',
+                        strict: true,
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                position: {
+                                    type: 'string',
+                                    description: 'Options: "long" or "short"',
+                                },
+                                entryPrice: {
+                                    type: 'number',
+                                    description: 'Recommended entry price',
+                                },
+                                takeProfit: {
+                                    type: 'string',
+                                    description: 'Target take-profit price (1.5% - 3% above entry, based on analysis)',
+                                },
+                                stoploss: {
+                                    type: 'string',
+                                    description: 'Target take-profit price (1.5% - 3% above entry, based on analysis)',
+                                },
+                                riskLevel: {
+                                    type: 'string',
+                                    description: 'Options: "low", "medium", "high"',
+                                },
+                                confidenceScore: {
+                                    type: 'number',
+                                    description: 'Confidence in analysis (0-100%)',
+                                },
+                                expectedDuration: {
+                                    type: 'string',
+                                    description: 'Expected trade duration in days (maximum 3 days)',
+                                },
+                                keyInsights: {
+                                    type: 'string',
+                                    description: 'Brief summary of important news/events affecting the stock',
+                                },
+                            },
+                            required: ['keyInsights', 'expectedDuration', 'confidenceScore', 'stoploss', 'takeProfit', 'entryPrice', 'position', 'riskLevel'],
+                            additionalProperties: false,
+                        },
+                    },
+                },
+                plugins: [
+                    {
+                        id: 'web',
+                        max_results: 3,
+                    },
+                ],
                 messages: [
                     {
                         role: 'system',
@@ -186,6 +228,7 @@ app.post('/analyze', async (req, res) => {
             }),
         });
         const data = await response.json();
+        console.log('Response from OpenRouter:', JSON.stringify(data));
         const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
         const analysisResponse = JSON.parse(message);
         res.json(analysisResponse);
