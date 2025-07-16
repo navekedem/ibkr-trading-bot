@@ -3,7 +3,7 @@ import { MarketData } from '@app-types/market-data';
 import { TextClassificationSingle } from '@huggingface/transformers';
 import { Flex } from 'antd';
 import { createContext, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import EmptyState from '../../assets/empty_state.png';
 import { useStockSelection } from '../../hooks/useStockSelection';
 import { AppBar } from '../AppBar/AppBar';
@@ -23,6 +23,18 @@ export const SelectedStockDataContext = createContext<{
 export const AppLayout: React.FC = () => {
     const [selectedStock, setSelectedStock] = useState<Company | null>(null);
     const stockData = useStockSelection({ selectedStock });
+    const { pathname } = useLocation();
+
+    const renderAppContent = () => {
+        if (pathname.includes('scanner')) return <Outlet />;
+        if (!selectedStock) return <NoSelectedStockContent />;
+        return (
+            <>
+                <StockTitle selectedStock={selectedStock} />
+                <Outlet />
+            </>
+        );
+    };
 
     return (
         <SelectedStockContext.Provider value={selectedStock}>
@@ -31,16 +43,7 @@ export const AppLayout: React.FC = () => {
                     <AppBar setSelectedStock={setSelectedStock} />
                     <Flex flex={1} style={{ position: 'relative', gap: '10px', overflowX: 'hidden' }}>
                         <SideNav />
-                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
-                            {!selectedStock ? (
-                                <NoSelectedStockContent />
-                            ) : (
-                                <>
-                                    <StockTitle selectedStock={selectedStock} />
-                                    <Outlet />
-                                </>
-                            )}
-                        </div>
+                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>{renderAppContent()}</div>
                     </Flex>
                 </Flex>
             </SelectedStockDataContext.Provider>

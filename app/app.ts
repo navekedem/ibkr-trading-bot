@@ -6,6 +6,7 @@ import http from 'http';
 import { WebSocketServer } from 'ws';
 import type { Company, CompanyAnalysis } from '../types/company';
 import { aggregateMinutesChart, formatDateToCustomString, parseDateStringNative, triggerInteractiveEvents } from './utils/general.ts';
+import { marketScanPrompt, tradePrompt } from './utils/prompts.ts';
 
 const app = express();
 app.use(cors());
@@ -22,35 +23,6 @@ let newProviders: NewsProvider[] = [
     { providerCode: 'DJ-RTE', providerName: 'Dow Jones Real-Time News Europe' },
     { providerCode: 'DJ-RTG', providerName: 'Dow Jones Real-Time News Global' },
 ];
-
-const prompt = `You are a knowledgeable financial analyst specializing in swing trading. I will provide you with JSON data for a specific stock.
-First, search the web for recent news, company reports, and market updates from the past 30 days that could influence the stock's price.
-Next, analyze both the data you collected and the JSON data I provided.
-Finally, return your analysis strictly in the following JSON format:
-{
-    "position": "",        // Options: "long" or "short"
-    "entryPrice": "",      // Recommended entry price
-    "takeProfit": "",      // Target take-profit price (1.5% - 3% above entry, based on analysis)
-    "stoploss": "",        // Suggested stop-loss price (1% below entry-price)
-    "riskLevel": "",       // Options: "low", "medium", "high"
-    "confidenceScore": "", // Confidence in analysis (0-100%)
-    "expectedDuration": "",// Expected trade duration in days (maximum 3 days)
-    "keyInsights": ""      // Brief summary of important news/events affecting the stock
-}
-Important Guidelines:
-
-Take-Profit Calculation: Set the takeProfit price between 1.5% and 3% above the enterPosition price. Determine the exact percentage based on price action, technical indicators, recent news, and sentiment analysis.
-
-Stop-Loss Calculation: Set the stoploss price exactly 1% below the entryPrice price to manage risk effectively.
-
-⚠️ Important: Provide only the JSON response in the exact format above—no additional text or explanations.
-
-Additional Notes:
-Focus on swing trading opportunities with a maximum trade duration of 7 days.
-Prioritize information from the past 30 days.
-Ignore speculative news with low credibility.
-Utilize technical indicators such as moving averages, support and resistance, Relative Strength Index (RSI), and volume trends to inform your analysis.
-`;
 
 const ib = new IBApi({ port: 7497 });
 
@@ -218,7 +190,7 @@ app.post('/analyze', async (req, res) => {
                 messages: [
                     {
                         role: 'system',
-                        content: prompt,
+                        content: tradePrompt,
                     },
                     {
                         role: 'user',
@@ -298,6 +270,103 @@ app.post('/submit-order', (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to place order',
+            details: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+
+app.get('/scan-market', async (req, res) => {
+    try {
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'openai/gpt-4o-mini-search-preview',
+                response_format: {
+                    type: 'json_schema',
+                    json_schema: {
+                        name: 'market_scan',
+                        strict: true,
+                        schema: {
+                            type: 'object',
+                            properties: {
+                                stocks: {
+                                    type: 'array',
+                                    items: {
+                                        type: 'object',
+                                        properties: {
+                                            ticker: {
+                                                type: 'string',
+                                                description: 'Ticker symbol of the stock',
+                                            },
+                                            companyName: {
+                                                type: 'string',
+                                                description: 'Name of the company',
+                                            },
+                                            position: {
+                                                type: 'string',
+                                                description: 'Recommended position (Long or Short)',
+                                            },
+                                            entryPrice: {
+                                                type: 'number',
+                                                description: 'Recommended entry price',
+                                            },
+                                            targetExitPrice: {
+                                                type: 'number',
+                                                description: 'Target exit price',
+                                            },
+                                            stopLoss: {
+                                                type: 'number',
+                                                description: 'Stop-loss level',
+                                            },
+                                            estimatedProfitPotential: {
+                                                type: 'number',
+                                                description: 'Estimated profit potential in percentage',
+                                            },
+                                            keyDrivers: {
+                                                type: 'string',
+                                                description: 'Key drivers for the stock recommendation',
+                                            },
+                                        },
+                                        required: [
+                                            'ticker',
+                                            'companyName',
+                                            'position',
+                                            'entryPrice',
+                                            'targetExitPrice',
+                                            'stopLoss',
+                                            'estimatedProfitPotential',
+                                            'keyDrivers',
+                                        ],
+                                        additionalProperties: false,
+                                    },
+                                },
+                            },
+                            required: ['stocks'],
+                            additionalProperties: false,
+                        },
+                    },
+                },
+                messages: [
+                    {
+                        role: 'system',
+                        content: marketScanPrompt(new Date().toISOString()),
+                    },
+                ],
+            }),
+        });
+        const data = await response.json();
+        console.log('Response from OpenRouter:', JSON.stringify(data));
+        const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
+        const analysisResponse = JSON.parse(message);
+        res.json(analysisResponse);
+    } catch (error) {
+        console.error('Analysis error:', error);
+        res.status(500).json({
+            error: 'Failed to analyze company',
             details: error instanceof Error ? error.message : 'Unknown error',
         });
     }

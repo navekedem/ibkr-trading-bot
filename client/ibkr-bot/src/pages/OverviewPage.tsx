@@ -20,7 +20,6 @@ export const OverviewPage = () => {
         return () => newWorker.terminate();
     }, []);
 
-    console.log('sentiments', sentiments);
     return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
             {newsHeadlines.map((newsHeadline) => (

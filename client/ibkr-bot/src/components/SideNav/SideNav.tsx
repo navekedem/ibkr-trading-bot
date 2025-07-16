@@ -1,4 +1,5 @@
 import { List } from 'antd';
+import { AiOutlineSecurityScan } from 'react-icons/ai';
 import { HiOutlineChartSquareBar } from 'react-icons/hi';
 import { PiGaugeLight } from 'react-icons/pi';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,10 @@ const data = [
     {
         title: <Link to="/charts">Charts</Link>,
         icon: <HiOutlineChartSquareBar size={20} />,
+    },
+    {
+        title: <Link to="/scanner">Scanner</Link>,
+        icon: <AiOutlineSecurityScan size={20} />,
     },
 ];
 
