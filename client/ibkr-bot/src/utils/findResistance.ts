@@ -1,4 +1,4 @@
-import { AnnotationLine, MarketData } from '@app-types/market-data';
+import { AnnotationLine, MarketData } from '@/types/market-data';
 import { findAverageBarHeight } from './findAverageBarHeight';
 
 export const findResistance = (marketData: MarketData[]) => {

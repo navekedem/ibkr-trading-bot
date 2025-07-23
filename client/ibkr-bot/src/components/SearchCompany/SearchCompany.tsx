@@ -1,12 +1,14 @@
-import { Company } from '@app-types/company';
+import { Company } from '@/types/company';
 import { useMutation } from '@tanstack/react-query';
 import { AutoComplete } from 'antd';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { getCompanies } from '../../api/get-companies/get-companies';
 import { useDebounce } from '../../hooks/useDebounce';
 import { formatData } from '../../utils/formatApiData';
+import { SelectedStockContext } from '../AppLayout/AppLayout';
 
 export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.SetStateAction<Company | null>> }> = ({ setSelectedStock }) => {
+    const selectedStock = useContext(SelectedStockContext);
     const [formattedData, setFormattedData] = useState<Company[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -17,6 +19,13 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
             setFormattedData(formatData(data));
         },
     });
+
+    // Update search term when selected stock changes from external source
+    useEffect(() => {
+        if (selectedStock) {
+            setSearchTerm(`${selectedStock.ticker} - ${selectedStock.name}`);
+        }
+    }, [selectedStock]);
 
     useEffect(() => {
         if (!debouncedSearchTerm) return;
@@ -32,7 +41,7 @@ export const SearchCompany: React.FC<{ setSelectedStock: React.Dispatch<React.Se
         const selectedItem = formattedData.find((item) => item.cik === selectedItemValue) || null;
         if (!selectedItem) return;
         setSelectedStock(selectedItem);
-        setSearchTerm(selectedItem.name);
+        setSearchTerm(`${selectedItem.ticker} - ${selectedItem.name}`);
     };
 
     const renderItem = (item: Company) => {

@@ -134,7 +134,7 @@ app.post('/analyze', async (req, res) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'meta-llama/llama-4-maverick:free',
+                model: 'google/gemini-2.5-flash-lite-preview-06-17',
                 response_format: {
                     type: 'json_schema',
                     json_schema: {
@@ -181,12 +181,12 @@ app.post('/analyze', async (req, res) => {
                         },
                     },
                 },
-                plugins: [
-                    {
-                        id: 'web',
-                        max_results: 3,
-                    },
-                ],
+                // plugins: [
+                //     {
+                //         id: 'web',
+                //         max_results: 3,
+                //     },
+                // ],
                 messages: [
                     {
                         role: 'system',

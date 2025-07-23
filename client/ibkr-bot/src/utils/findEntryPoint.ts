@@ -1,4 +1,4 @@
-import { AnnotationLine, MarketData } from '@app-types/market-data';
+import { AnnotationLine, MarketData } from '@/types/market-data';
 
 export const findEntryPoint = (chartData: MarketData[], supportLines: AnnotationLine[], resistenceLines: AnnotationLine[]): PointAnnotations => {
     const filterdata = chartData.filter((price) => price.open > 0);

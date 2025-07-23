@@ -28,3 +28,14 @@ export interface SubmitOrderRequest {
     stoploss: number;
     takeProfit: number;
 }
+
+export interface ScannerData {
+    ticker: string;
+    companyName: string;
+    position: string;
+    entryPrice: number;
+    targetExitPrice: number;
+    stopLoss: number;
+    estimatedProfitPotential: number;
+    keyDrivers: string;
+}

@@ -1,32 +1,54 @@
-import { Avatar, Table, Tag, Typography } from 'antd';
+import { Company } from '@/types/company';
+import { ScannerData } from '@/types/market-data';
+import { Avatar, Button, Table, Tag, Typography } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import React from 'react';
+import { HiOutlineChartSquareBar } from 'react-icons/hi';
+import { useNavigate } from 'react-router-dom';
 
 const { Text, Title } = Typography;
 
-interface StockData {
-    ticker: string;
-    companyName: string;
-    position: string;
-    entryPrice: number;
-    targetExitPrice: number;
-    stopLoss: number;
-    estimatedProfitPotential: number;
-    keyDrivers: string;
-}
-
 interface StockTableProps {
-    stocks: StockData[];
+    stocks: ScannerData[];
     loading?: boolean;
+    setSelectedStock?: React.Dispatch<React.SetStateAction<Company | null>>;
 }
 
-export const StockTable: React.FC<StockTableProps> = ({ stocks, loading = false }) => {
-    const columns: ColumnsType<StockData> = [
+export const StockTable: React.FC<StockTableProps> = ({ stocks, loading = false, setSelectedStock }) => {
+    const navigate = useNavigate();
+
+    // Function to convert ScannerData to Company format
+    const convertToCompany = (scannerData: ScannerData): Company => {
+        return {
+            active: true,
+            cik: '', // Not available in ScannerData
+            composite_figi: '', // Not available in ScannerData
+            currency_name: 'USD',
+            last_updated_utc: new Date().toISOString(),
+            locale: 'us',
+            market: 'stocks',
+            name: scannerData.companyName,
+            primary_exchange: 'NASDAQ', // Default assumption
+            share_class_figi: '', // Not available in ScannerData
+            ticker: scannerData.ticker,
+            type: 'CS', // Common Stock
+        };
+    };
+
+    const handleSelectStock = (record: ScannerData) => {
+        if (setSelectedStock) {
+            const company = convertToCompany(record);
+            setSelectedStock(company);
+            navigate('/charts');
+        }
+    };
+
+    const columns: ColumnsType<ScannerData> = [
         {
             title: 'Company',
             dataIndex: 'ticker',
             key: 'company',
-            render: (ticker: string, record: StockData) => (
+            render: (ticker: string, record: ScannerData) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <Avatar src={`https://financialmodelingprep.com/image-stock/${ticker}.png`} alt={ticker} size={40} style={{ backgroundColor: '#f0f0f0' }} />
                     <div>
@@ -86,10 +108,25 @@ export const StockTable: React.FC<StockTableProps> = ({ stocks, loading = false 
             render: (drivers: string) => <Text style={{ fontSize: '12px' }}>{drivers}</Text>,
             ellipsis: true,
         },
+        // Conditionally add the Action column only if setSelectedStock is available
+        ...(setSelectedStock
+            ? [
+                  {
+                      title: 'Action',
+                      key: 'action',
+                      render: (_: any, record: ScannerData) => (
+                          <Button type="primary" icon={<HiOutlineChartSquareBar />} onClick={() => handleSelectStock(record)} size="small" title="View Charts">
+                              Charts
+                          </Button>
+                      ),
+                      width: 100,
+                      fixed: 'right' as const,
+                  },
+              ]
+            : []),
     ];
 
     return (
-        // <Card style={{ padding: 0 }}>
         <Table
             columns={columns}
             dataSource={stocks}
@@ -105,6 +142,5 @@ export const StockTable: React.FC<StockTableProps> = ({ stocks, loading = false 
             style={{ backgroundColor: '#fff' }}
             size="middle"
         />
-        // </Card>
     );
 };

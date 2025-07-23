@@ -1,4 +1,4 @@
-import { CompanyNewsHeadline } from '@app-types/company';
+import { CompanyNewsHeadline } from '@/types/company';
 import { TextClassificationSingle } from '@huggingface/transformers';
 import { Card } from 'antd';
 import { useEffect, useState } from 'react';

@@ -1,6 +1,6 @@
-import { Company, CompanyAnalysis, CompanyNewsHeadline } from '@app-types/company';
-import { MarketData } from '@app-types/market-data';
-import { dc, macd, rsi, vpt,  } from 'indicatorts';
+import { Company, CompanyAnalysis, CompanyNewsHeadline } from '@/types/company';
+import { MarketData } from '@/types/market-data';
+import { dc, macd, rsi, vpt } from 'indicatorts';
 import { findResistance } from './findResistance';
 import { findSupport } from './findSupport';
 

@@ -1,4 +1,4 @@
-import { Company, CompanyAnalysisResponse } from '@app-types/company';
+import { Company, CompanyAnalysisResponse } from '@/types/company';
 // import { OrderAction } from '@stoqey/ib';
 import { useMutation } from '@tanstack/react-query';
 import { Button, Flex } from 'antd';

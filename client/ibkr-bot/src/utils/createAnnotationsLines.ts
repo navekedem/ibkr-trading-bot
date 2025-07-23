@@ -1,4 +1,4 @@
-import { MarketData } from '@app-types/market-data';
+import { MarketData } from '@/types/market-data';
 import { ApexOptions } from 'apexcharts';
 import { findResistance } from './findResistance';
 import { findSupport } from './findSupport';

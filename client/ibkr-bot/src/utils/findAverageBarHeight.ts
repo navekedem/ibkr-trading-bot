@@ -1,4 +1,4 @@
-import { MarketData } from '@app-types/market-data';
+import { MarketData } from '@/types/market-data';
 
 export const findAverageBarHeight = (marketData: MarketData[]) => {
     const averageBarHeight =

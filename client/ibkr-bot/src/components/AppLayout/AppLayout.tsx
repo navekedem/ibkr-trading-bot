@@ -1,5 +1,5 @@
-import { Company, CompanyNewsHeadline } from '@app-types/company';
-import { MarketData } from '@app-types/market-data';
+import { Company, CompanyNewsHeadline } from '@/types/company';
+import { MarketData, ScannerData } from '@/types/market-data';
 import { TextClassificationSingle } from '@huggingface/transformers';
 import { Flex } from 'antd';
 import { createContext, useState } from 'react';
@@ -11,6 +11,11 @@ import { SideNav } from '../SideNav/SideNav';
 import { StockTitle } from '../StockTitle/StockTitle';
 
 export const SelectedStockContext = createContext<Company | null>(null);
+export const SelectedStockSetterContext = createContext<React.Dispatch<React.SetStateAction<Company | null>> | null>(null);
+export const ScannerResultContext = createContext<{ scannerData: ScannerData[]; setScannerData: React.Dispatch<React.SetStateAction<ScannerData[]>> }>({
+    scannerData: [],
+    setScannerData: () => {},
+});
 export const SelectedStockDataContext = createContext<{
     dailyChartData: MarketData[];
     hourlyChartData: MarketData[];
@@ -22,6 +27,7 @@ export const SelectedStockDataContext = createContext<{
 
 export const AppLayout: React.FC = () => {
     const [selectedStock, setSelectedStock] = useState<Company | null>(null);
+    const [scannerData, setScannerData] = useState<ScannerData[]>([]);
     const stockData = useStockSelection({ selectedStock });
     const { pathname } = useLocation();
 
@@ -38,15 +44,19 @@ export const AppLayout: React.FC = () => {
 
     return (
         <SelectedStockContext.Provider value={selectedStock}>
-            <SelectedStockDataContext.Provider value={stockData}>
-                <Flex vertical={true} style={{ height: '100%' }}>
-                    <AppBar setSelectedStock={setSelectedStock} />
-                    <Flex flex={1} style={{ position: 'relative', gap: '10px', overflowX: 'hidden' }}>
-                        <SideNav />
-                        <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>{renderAppContent()}</div>
-                    </Flex>
-                </Flex>
-            </SelectedStockDataContext.Provider>
+            <SelectedStockSetterContext.Provider value={setSelectedStock}>
+                <SelectedStockDataContext.Provider value={stockData}>
+                    <ScannerResultContext.Provider value={{ scannerData, setScannerData }}>
+                        <Flex vertical={true} style={{ height: '100%' }}>
+                            <AppBar setSelectedStock={setSelectedStock} />
+                            <Flex flex={1} style={{ position: 'relative', gap: '10px', overflowX: 'hidden' }}>
+                                <SideNav />
+                                <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>{renderAppContent()}</div>
+                            </Flex>
+                        </Flex>
+                    </ScannerResultContext.Provider>
+                </SelectedStockDataContext.Provider>
+            </SelectedStockSetterContext.Provider>
         </SelectedStockContext.Provider>
     );
 };

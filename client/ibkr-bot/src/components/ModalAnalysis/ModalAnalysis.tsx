@@ -1,4 +1,4 @@
-import { CompanyAnalysisResponse } from '@app-types/company';
+import { CompanyAnalysisResponse } from '@/types/company';
 import { Modal, ModalProps } from 'antd';
 
 type ModalAnalysisProps = ModalProps & {

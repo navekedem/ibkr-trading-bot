@@ -1,4 +1,4 @@
-import { Company } from '@app-types/company';
+import { Company } from '@/types/company';
 import { Button, Flex } from 'antd';
 import { FaHome } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';

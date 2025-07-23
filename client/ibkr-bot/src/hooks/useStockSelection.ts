@@ -1,5 +1,5 @@
-import { Company, CompanyNewsHeadline } from '@app-types/company';
-import { MarketData } from '@app-types/market-data';
+import { Company, CompanyNewsHeadline } from '@/types/company';
+import { MarketData } from '@/types/market-data';
 import { TextClassificationSingle } from '@huggingface/transformers';
 import { useEffect, useState } from 'react';
 import { useWebSocket } from './useWebSocket';
