@@ -3,7 +3,6 @@ import { Flex, Space, Typography } from 'antd';
 import { useContext, useEffect } from 'react';
 import { scanMarket } from '../api/scan-market/scan-market';
 import { ScannerResultContext, SelectedStockSetterContext } from '../components/AppLayout/AppLayout';
-import { StockTable } from '../components/StockTable/StockTable';
 
 const { Title } = Typography;
 
@@ -13,12 +12,13 @@ export const ScannerPage = () => {
 
     const { data, isLoading, isFetching } = useQuery({
         queryKey: ['scan-market'],
-        queryFn: async () => await scanMarket(),
+        queryFn: async () => await scanMarket(false),
         enabled: !scannerData.length,
     });
 
     useEffect(() => {
-        if (data?.stocks?.length && !scannerData.length) setScannerData(data.stocks);
+        // if (data?.stocks?.length && !scannerData.length) setScannerData(data.stocks);
+        console.log('ScannerPage data:', data);
     }, [data, scannerData]);
 
     return (
@@ -28,11 +28,11 @@ export const ScannerPage = () => {
                     <Title level={2}>Market Scanner</Title>
                 </Flex>
 
-                <StockTable
+                {/* <StockTable
                     stocks={scannerData.length ? scannerData : data?.stocks || []}
                     loading={isLoading || isFetching}
                     setSelectedStock={setSelectedStock || undefined}
-                />
+                /> */}
             </Space>
         </div>
     );

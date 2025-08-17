@@ -1,7 +1,7 @@
-export const scanMarket = async (): Promise<any> => {
+export const scanMarket = async (isSwing: boolean): Promise<any> => {
     const errorMessage = 'Error in scan market';
     try {
-        const response = await fetch('http://localhost:8080/scan-market', {
+        const response = await fetch(`http://localhost:8080/scan-market?isSwing=${isSwing}`, {
             headers: {
                 'Content-Type': 'application/json',
             },

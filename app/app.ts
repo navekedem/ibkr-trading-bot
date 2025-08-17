@@ -7,6 +7,7 @@ import { WebSocketServer } from 'ws';
 import type { Company, CompanyAnalysis } from '../types/company';
 import { aggregateMinutesChart, formatDateToCustomString, parseDateStringNative, triggerInteractiveEvents } from './utils/general.ts';
 import { marketScanPrompt, tradePrompt } from './utils/prompts.ts';
+import { analysisSchema, dayTradeSchema } from './utils/schemas.ts';
 
 const app = express();
 app.use(cors());
@@ -23,7 +24,8 @@ let newProviders: NewsProvider[] = [
     { providerCode: 'DJ-RTE', providerName: 'Dow Jones Real-Time News Europe' },
     { providerCode: 'DJ-RTG', providerName: 'Dow Jones Real-Time News Global' },
 ];
-
+const perplexityUrl = 'https://api.perplexity.ai/chat/completions';
+const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
 const ib = new IBApi({ port: 7497 });
 
 ib.on(EventName.connected, () => {
@@ -127,66 +129,18 @@ app.post('/analyze', async (req, res) => {
         if (!companyAnalysis) {
             return res.status(400).json({ error: 'Company analysis is required' });
         }
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch(openRouterUrl, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'google/gemini-2.5-flash-lite-preview-06-17',
+                model: 'openai/gpt-4o-mini-search-preview',
                 response_format: {
                     type: 'json_schema',
-                    json_schema: {
-                        name: 'financial_analysis',
-                        strict: true,
-                        schema: {
-                            type: 'object',
-                            properties: {
-                                position: {
-                                    type: 'string',
-                                    description: 'Options: "long" or "short"',
-                                },
-                                entryPrice: {
-                                    type: 'number',
-                                    description: 'Recommended entry price',
-                                },
-                                takeProfit: {
-                                    type: 'string',
-                                    description: 'Target take-profit price (1.5% - 3% above entry, based on analysis)',
-                                },
-                                stoploss: {
-                                    type: 'string',
-                                    description: 'Target take-profit price (1.5% - 3% above entry, based on analysis)',
-                                },
-                                riskLevel: {
-                                    type: 'string',
-                                    description: 'Options: "low", "medium", "high"',
-                                },
-                                confidenceScore: {
-                                    type: 'number',
-                                    description: 'Confidence in analysis (0-100%)',
-                                },
-                                expectedDuration: {
-                                    type: 'string',
-                                    description: 'Expected trade duration in days (maximum 3 days)',
-                                },
-                                keyInsights: {
-                                    type: 'string',
-                                    description: 'Brief summary of important news/events affecting the stock',
-                                },
-                            },
-                            required: ['keyInsights', 'expectedDuration', 'confidenceScore', 'stoploss', 'takeProfit', 'entryPrice', 'position', 'riskLevel'],
-                            additionalProperties: false,
-                        },
-                    },
+                    json_schema: analysisSchema,
                 },
-                // plugins: [
-                //     {
-                //         id: 'web',
-                //         max_results: 3,
-                //     },
-                // ],
                 messages: [
                     {
                         role: 'system',
@@ -277,7 +231,8 @@ app.post('/submit-order', (req, res) => {
 
 app.get('/scan-market', async (req, res) => {
     try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const isSwing = req.query.isSwing === 'true';
+        const response = await fetch(openRouterUrl, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
@@ -285,81 +240,88 @@ app.get('/scan-market', async (req, res) => {
             },
             body: JSON.stringify({
                 model: 'openai/gpt-4o-mini-search-preview',
+                // search_domain_filter: [
+                //     'https://stocktwits.com/sentiment',
+                //     'https://www.investing.com/equities/pre-market',
+                //     'https://finviz.com/',
+                //     'https://finance.yahoo.com/',
+                // ],
                 response_format: {
                     type: 'json_schema',
                     json_schema: {
                         name: 'market_scan',
                         strict: true,
-                        schema: {
-                            type: 'object',
-                            properties: {
-                                stocks: {
-                                    type: 'array',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            ticker: {
-                                                type: 'string',
-                                                description: 'Ticker symbol of the stock',
-                                            },
-                                            companyName: {
-                                                type: 'string',
-                                                description: 'Name of the company',
-                                            },
-                                            position: {
-                                                type: 'string',
-                                                description: 'Recommended position (Long or Short)',
-                                            },
-                                            entryPrice: {
-                                                type: 'number',
-                                                description: 'Recommended entry price',
-                                            },
-                                            targetExitPrice: {
-                                                type: 'number',
-                                                description: 'Target exit price',
-                                            },
-                                            stopLoss: {
-                                                type: 'number',
-                                                description: 'Stop-loss level',
-                                            },
-                                            estimatedProfitPotential: {
-                                                type: 'number',
-                                                description: 'Estimated profit potential in percentage',
-                                            },
-                                            keyDrivers: {
-                                                type: 'string',
-                                                description: 'Key drivers for the stock recommendation',
-                                            },
-                                        },
-                                        required: [
-                                            'ticker',
-                                            'companyName',
-                                            'position',
-                                            'entryPrice',
-                                            'targetExitPrice',
-                                            'stopLoss',
-                                            'estimatedProfitPotential',
-                                            'keyDrivers',
-                                        ],
-                                        additionalProperties: false,
-                                    },
-                                },
-                            },
-                            required: ['stocks'],
-                            additionalProperties: false,
-                        },
+                        schema: dayTradeSchema,
+                        // schema: {
+                        //     type: 'object',
+                        //     properties: {
+                        //         stocks: {
+                        //             type: 'array',
+                        //             items: {
+                        //                 type: 'object',
+                        //                 properties: {
+                        //                     ticker: {
+                        //                         type: 'string',
+                        //                         description: 'Ticker symbol of the stock',
+                        //                     },
+                        //                     companyName: {
+                        //                         type: 'string',
+                        //                         description: 'Name of the company',
+                        //                     },
+                        //                     position: {
+                        //                         type: 'string',
+                        //                         description: 'Recommended position (Long or Short)',
+                        //                     },
+                        //                     entryPrice: {
+                        //                         type: 'number',
+                        //                         description: 'Recommended entry price',
+                        //                     },
+                        //                     targetExitPrice: {
+                        //                         type: 'number',
+                        //                         description: 'Target exit price',
+                        //                     },
+                        //                     stopLoss: {
+                        //                         type: 'number',
+                        //                         description: 'Stop-loss level',
+                        //                     },
+                        //                     estimatedProfitPotential: {
+                        //                         type: 'number',
+                        //                         description: 'Estimated profit potential in percentage',
+                        //                     },
+                        //                     keyDrivers: {
+                        //                         type: 'string',
+                        //                         description: 'Key drivers for the stock recommendation',
+                        //                     },
+                        //                 },
+                        //                 required: [
+                        //                     'ticker',
+                        //                     'companyName',
+                        //                     'position',
+                        //                     'entryPrice',
+                        //                     'targetExitPrice',
+                        //                     'stopLoss',
+                        //                     'estimatedProfitPotential',
+                        //                     'keyDrivers',
+                        //                 ],
+                        //                 additionalProperties: false,
+                        //             },
+                        //         },
+                        //     },
+                        //     required: ['stocks'],
+                        //     additionalProperties: false,
+                        // },
                     },
                 },
                 messages: [
                     {
-                        role: 'system',
-                        content: marketScanPrompt(new Date().toISOString()),
+                        role: 'user',
+                        content: marketScanPrompt(new Date().toISOString(), isSwing),
                     },
                 ],
             }),
         });
         const data = await response.json();
-        console.log('Response from OpenRouter:', JSON.stringify(data));
+        console.log('Response from Perplexity:', JSON.stringify(data));
         const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
         const analysisResponse = JSON.parse(message);
         res.json(analysisResponse);
