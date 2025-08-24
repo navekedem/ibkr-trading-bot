@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@alpacahq/alpaca-trade-api": "^3.0.1",
     "@stoqey/ib": "^1.5.0",
     "@types/express": "^4.17.15",
     "@types/ws": "^8.5.4",

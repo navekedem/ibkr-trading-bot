@@ -4,7 +4,7 @@
 
 IBKR Trading Bot is an automated trading application that integrates with Interactive Brokers (IBKR) to execute trading strategies. The project consists of a backend server built with Node.js/TypeScript and a React-based frontend client for monitoring and controlling trading activities.
 
-The bot supports both Interactive Brokers and Alpaca as data providers, allowing users to implement and execute various trading strategies with real-time market data.
+The bot supports Interactive Brokers as data provider, allowing users to implement and execute various trading strategies with real-time market data.
 
 ## Project Structure
 
@@ -13,7 +13,6 @@ ibkr-trading-bot/
 ├── app/                    # Backend server
 │   ├── app.ts              # Main server application
 │   ├── interactive-data-handler.ts  # IBKR data handling
-│   ├── alpaca-data-handler.ts       # Alpaca data handling
 │   └── utils/              # Utility functions
 ├── client/                 # Frontend application
 │   └── ibkr-bot/           # React client
@@ -33,7 +32,6 @@ ibkr-trading-bot/
 ## Features
 
 -   Integration with Interactive Brokers API for trading
--   Alternative integration with Alpaca Markets API
 -   Real-time market data processing
 -   Custom trading strategy implementation
 -   Web-based dashboard for monitoring and control
@@ -42,7 +40,7 @@ ibkr-trading-bot/
 ## Prerequisites
 
 -   Node.js (v14 or higher)
--   Interactive Brokers account or Alpaca Markets account
+-   Interactive Brokers account
 -   IBKR Trader Workstation (TWS) or IB Gateway (for IBKR integration)
 
 ## Installation
@@ -95,7 +93,6 @@ ibkr-trading-bot/
 The application requires configuration for connecting to your brokerage account:
 
 1. For IBKR: Ensure TWS or IB Gateway is running and configured to accept API connections
-2. For Alpaca: Provide your API key and secret in the environment variables
 
 Example `.env` configuration:
 
@@ -105,9 +102,6 @@ IBKR_HOST=127.0.0.1
 IBKR_PORT=7496
 IBKR_CLIENT_ID=1
 
-# For Alpaca
-ALPACA_API_KEY=your_api_key
-ALPACA_API_SECRET=your_api_secret
 ```
 
 ## Usage
