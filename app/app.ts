@@ -1,17 +1,22 @@
 import type { ContractDetails, NewsProvider, Order } from '@stoqey/ib';
 import { ErrorCode, EventName, IBApi, OrderAction, OrderType, Stock } from '@stoqey/ib';
+import OpenAI from 'openai';
 import cors from 'cors';
 import express from 'express';
 import http from 'http';
 import { WebSocketServer } from 'ws';
 import type { Company, CompanyAnalysis } from '../types/company';
 import { aggregateMinutesChart, formatDateToCustomString, parseDateStringNative, triggerInteractiveEvents } from './utils/general.ts';
-import { marketScanPrompt, tradePrompt } from './utils/prompts.ts';
-import { analysisSchema, dayTradeSchema } from './utils/schemas.ts';
+import { dayTradeScanPrompt, tradePrompt } from './utils/prompts.ts';
+import { analysisSchema, dayTradeSchema, swingTradeSchema } from './utils/schemas.ts';
+import { investingPreMarketMostActiveScanner, stockTwitsMostActiveScanner, stockTwitsTrendingScanner } from './utils/tools.ts';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // This is the default and can be omitted
+});
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 let connected = false;
@@ -26,6 +31,7 @@ let newProviders: NewsProvider[] = [
 ];
 const perplexityUrl = 'https://api.perplexity.ai/chat/completions';
 const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+const openAIUrl = 'https://api.openai.com/v1/responses';
 const ib = new IBApi({ port: 7497 });
 
 ib.on(EventName.connected, () => {
@@ -232,99 +238,69 @@ app.post('/submit-order', (req, res) => {
 app.get('/scan-market', async (req, res) => {
     try {
         const isSwing = req.query.isSwing === 'true';
-        const response = await fetch(openRouterUrl, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: 'openai/gpt-4o-mini-search-preview',
-                // search_domain_filter: [
-                //     'https://stocktwits.com/sentiment',
-                //     'https://www.investing.com/equities/pre-market',
-                //     'https://finviz.com/',
-                //     'https://finance.yahoo.com/',
-                // ],
-                response_format: {
+        const response = await client.responses.create({
+            model: 'gpt-5-mini',
+            instructions: 'Use the stockTwitsTrendingScanner and stockTwitsMostActiveScanner tools before you perform the web search',
+            text: {
+                format: {
                     type: 'json_schema',
-                    json_schema: {
-                        name: 'market_scan',
-                        strict: true,
-                        schema: dayTradeSchema,
-                        // schema: {
-                        //     type: 'object',
-                        //     properties: {
-                        //         stocks: {
-                        //             type: 'array',
-                        //             items: {
-                        //                 type: 'object',
-                        //                 properties: {
-                        //                     ticker: {
-                        //                         type: 'string',
-                        //                         description: 'Ticker symbol of the stock',
-                        //                     },
-                        //                     companyName: {
-                        //                         type: 'string',
-                        //                         description: 'Name of the company',
-                        //                     },
-                        //                     position: {
-                        //                         type: 'string',
-                        //                         description: 'Recommended position (Long or Short)',
-                        //                     },
-                        //                     entryPrice: {
-                        //                         type: 'number',
-                        //                         description: 'Recommended entry price',
-                        //                     },
-                        //                     targetExitPrice: {
-                        //                         type: 'number',
-                        //                         description: 'Target exit price',
-                        //                     },
-                        //                     stopLoss: {
-                        //                         type: 'number',
-                        //                         description: 'Stop-loss level',
-                        //                     },
-                        //                     estimatedProfitPotential: {
-                        //                         type: 'number',
-                        //                         description: 'Estimated profit potential in percentage',
-                        //                     },
-                        //                     keyDrivers: {
-                        //                         type: 'string',
-                        //                         description: 'Key drivers for the stock recommendation',
-                        //                     },
-                        //                 },
-                        //                 required: [
-                        //                     'ticker',
-                        //                     'companyName',
-                        //                     'position',
-                        //                     'entryPrice',
-                        //                     'targetExitPrice',
-                        //                     'stopLoss',
-                        //                     'estimatedProfitPotential',
-                        //                     'keyDrivers',
-                        //                 ],
-                        //                 additionalProperties: false,
-                        //             },
-                        //         },
-                        //     },
-                        //     required: ['stocks'],
-                        //     additionalProperties: false,
-                        // },
+                    name: 'market_scan',
+                    strict: true,
+                    schema: isSwing ? swingTradeSchema : dayTradeSchema,
+                },
+            },
+            tool_choice: 'required',
+            tools: [
+                {
+                    type: 'function',
+                    name: 'stockTwitsTrendingScanner',
+                    description: 'Get trending stocks from StockTwits with fundamental data including 50-day moving average, volume, and earnings growth',
+                    // call: stockTwitsTrendingScanner,
+                    parameters: {
+                        type: 'object',
+                        properties: {},
+                        required: [],
                     },
                 },
-                messages: [
-                    {
-                        role: 'user',
-                        content: marketScanPrompt(new Date().toISOString(), isSwing),
+                {
+                    type: 'function',
+                    name: 'stockTwitsMostActiveScanner',
+                    description: 'Get most active stocks from StockTwits with price data and trading activity',
+                    // call: stockTwitsMostActiveScanner,
+                    parameters: {
+                        type: 'object',
+                        properties: {},
+                        required: [],
                     },
-                ],
-            }),
+                },
+                {
+                    type: 'function',
+                    name: 'investingPreMarketMostActiveScanner',
+                    description: 'Get pre-market data including most active, gainers, and losers with extended session trading data',
+                    // call: investingPreMarketMostActiveScanner,
+                    parameters: {
+                        type: 'object',
+                        properties: {},
+                        required: [],
+                    },
+                },
+                // { type: 'web_search' },
+            ],
+            input: [
+                {
+                    role: 'user',
+                    content: dayTradeScanPrompt(new Date().toISOString()),
+                },
+            ],
         });
-        const data = await response.json();
-        console.log('Response from Perplexity:', JSON.stringify(data));
-        const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
-        const analysisResponse = JSON.parse(message);
-        res.json(analysisResponse);
+        const data = response.output;
+        console.log('Response from OpenAI:', JSON.stringify(data));
+        console.log('Response from OpenAI:', response);
+        // const message = data?.output?.find((item: any) => item.type === 'message' && item.status === 'completed')?.content?.[0]?.text;
+        // const message = data?.choices?.[0].message.content.replace(/```json\n|\n```/g, '');
+        // const analysisResponse = JSON.parse(message);
+        // res.json(analysisResponse);
+        res.status(200).json(data);
     } catch (error) {
         console.error('Analysis error:', error);
         res.status(500).json({

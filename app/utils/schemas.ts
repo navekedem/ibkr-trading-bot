@@ -1,7 +1,7 @@
 export const dayTradeSchema = {
     type: 'object',
     properties: {
-        dayTrades: {
+        stocks: {
             type: 'array',
             minItems: 1,
             maxItems: 10,
@@ -12,49 +12,35 @@ export const dayTradeSchema = {
                         type: 'string',
                         description: 'Ticker symbol',
                     },
-                    company: { type: 'string', description: 'Company name' },
-                    bias: {
+                    companyName: { type: 'string', description: 'Company name' },
+                    position: {
                         type: 'string',
-                        description: 'Trade bias (Long/Short)',
+                        description: 'Trade position (Long/Short)',
                         enum: ['Long', 'Short'],
                     },
                     gapPct: {
                         type: 'number',
                         description: 'Premarket Gap % (e.g., 5.2 means +5.2%)',
                     },
-                    rvol: {
+                    entryPrice: {
                         type: 'number',
-                        description: 'Relative Volume (RVOL)',
-                        minimum: 0,
+                        description: 'Recommended entry price',
                     },
-                    entryPlan: {
+                    targetExitPrice: {
+                        type: 'number',
+                        description: 'Target exit price',
+                    },
+                    stopLoss: {
+                        type: 'number',
+                        description: 'Stop-loss level',
+                    },
+                    estimatedProfitPotential: {
+                        type: 'number',
+                        description: 'Estimated profit potential in percentage',
+                    },
+                    keyDrivers: {
                         type: 'string',
-                        description: 'Entry Plan (e.g., PM high break, VWAP reclaim)',
-                    },
-                    target: {
-                        type: 'number',
-                        description: 'Intraday target price',
-                        exclusiveMinimum: 0,
-                    },
-                    stop: {
-                        type: 'number',
-                        description: 'Intraday stop-loss level',
-                        exclusiveMinimum: 0,
-                    },
-                    rMultiple: {
-                        type: 'number',
-                        description: 'Estimated R multiple (TargetRisk/StopRisk)',
-                    },
-                    catalystDriver: {
-                        type: 'string',
-                        description: 'Catalyst/Driver (headline, social trend, unusual volume)',
-                        oneOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' }, minItems: 1 }],
-                    },
-                    keyLevels: {
-                        type: 'array',
-                        description: 'Key Intraday Levels (PM high/low, VWAP, ORB, PDH/PDL)',
-                        items: { type: 'string' },
-                        minItems: 1,
+                        description: 'Key drivers for the stock recommendation',
                     },
                     riskNotes: {
                         type: 'string',
@@ -69,24 +55,22 @@ export const dayTradeSchema = {
                 },
                 required: [
                     'ticker',
-                    'company',
-                    'bias',
+                    'companyName',
+                    'position',
                     'gapPct',
-                    'rvol',
-                    'entryPlan',
-                    'target',
-                    'stop',
-                    'rMultiple',
-                    'catalystDriver',
-                    'keyLevels',
+                    'targetExitPrice',
+                    'stopLoss',
+                    'keyDrivers',
                     'score',
                     'riskNotes',
+                    'entryPrice',
+                    'estimatedProfitPotential',
                 ],
                 additionalProperties: false,
             },
         },
     },
-    required: ['dayTrades'],
+    required: ['stocks'],
     additionalProperties: false,
 };
 

@@ -66,6 +66,7 @@ export const triggerInteractiveEvents = (ib: IBApi, stock: Stock) => {
     ib.reqHistoricalData(6002, stock, '', '3600 S', BarSizeSetting.MINUTES_ONE, 'ADJUSTED_LAST', 1, 1, false);
     ib.reqRealTimeBars(6003, stock, 1, 'ADJUSTED_LAST', true);
 };
+
 export const aggregateMinutesChart = (reqId: number, open: number, high: number, low: number, close: number, volume: number) => {
     if (!aggregationBuffer[reqId]) {
         aggregationBuffer[reqId] = {
